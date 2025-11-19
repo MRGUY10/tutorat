@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { 
@@ -16,7 +17,7 @@ import {
   providedIn: 'root'
 })
 export class SubjectService {
-  private readonly apiUrl = 'http://localhost:8080/api/matieres';
+  private readonly apiUrl = environment.BASE_URL + '/api/matieres';
   
   // State management
   private subjectsSubject = new BehaviorSubject<Subject[]>([]);

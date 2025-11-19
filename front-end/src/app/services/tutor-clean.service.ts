@@ -27,7 +27,7 @@ import {
   providedIn: 'root'
 })
 export class TutorService {
-  private readonly baseApiUrl = 'http://localhost:8080/api/tutors';
+  private readonly baseApiUrl = 'http://20.199.90.98:8080/api/tutors';
   
   // State management
   private tutorsSubject = new BehaviorSubject<TutorSummaryResponse[]>([]);

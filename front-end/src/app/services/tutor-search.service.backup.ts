@@ -29,7 +29,7 @@ import { convertLegacyFiltersToSearchRequest } from '../core/models/tutor-backen
   providedIn: 'root'
 })
 export class TutorSearchService {
-  private readonly reviewsApiUrl = 'http://localhost:8080/api/tutors/reviews';
+  private readonly reviewsApiUrl = 'http://20.199.90.98:8080/api/tutors/reviews';
   
   // State management - now delegates to TutorService
   public tutors$ = this.tutorService.tutors$.pipe(

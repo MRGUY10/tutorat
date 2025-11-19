@@ -32,7 +32,7 @@ import {
   providedIn: 'root'
 })
 export class SessionService {
-  private readonly apiUrl = 'http://localhost:8080/api';
+  private readonly apiUrl = 'http://20.199.90.98:8080/api';
   private readonly sessionEndpoint = `${this.apiUrl}/sessions`;
   private readonly requestEndpoint = `${this.apiUrl}/session-requests`;
 
