@@ -1,0 +1,383 @@
+<!-- Conversation List Container -->
+<div class="h-full flex flex-col bg-white border-r border-gray-200">
+  <!-- Header Section -->
+  <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Messages</h1>
+        <p class="text-sm text-gray-600" *ngIf="stats">
+          {{ stats.totalConversations }} conversations • {{ unreadCount }} non lues
+        </p>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2">
+        <!-- View Mode Toggle -->
+        <div class="flex bg-white rounded-lg border border-gray-200 p-1">
+          <button
+            (click)="setViewMode('list')"
+            [class.bg-blue-100]="viewMode === 'list'"
+            [class.text-blue-600]="viewMode === 'list'"
+            class="p-2 rounded-md transition-colors hover:bg-gray-100">
+            <i class="fas fa-list text-sm"></i>
+          </button>
+          <button
+            (click)="setViewMode('compact')"
+            [class.bg-blue-100]="viewMode === 'compact'"
+            [class.text-blue-600]="viewMode === 'compact'"
+            class="p-2 rounded-md transition-colors hover:bg-gray-100">
+            <i class="fas fa-th-list text-sm"></i>
+          </button>
+        </div>
+
+        <!-- New Conversation Button -->
+        <button
+          (click)="createNewConversation()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+          <i class="fas fa-plus mr-2"></i>
+          Nouveau
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <form [formGroup]="searchForm" class="relative">
+      <div class="relative">
+        <input
+          type="text"
+          formControlName="searchQuery"
+          placeholder="Rechercher une conversation..."
+          class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm">
+        
+        <!-- Search Icon -->
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i class="fas fa-search text-gray-400"></i>
+        </div>
+
+        <!-- Clear Search -->
+        <button
+          *ngIf="searchForm.get('searchQuery')?.value"
+          type="button"
+          (click)="clearSearch()"
+          class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+    <form [formGroup]="searchForm" class="flex flex-wrap gap-3">
+      <!-- Quick Filters -->
+      <div class="flex items-center space-x-3">
+        <label class="flex items-center">
+          <input
+            type="checkbox"
+            formControlName="onlyUnread"
+            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+          <span class="ml-2 text-sm text-gray-700">Non lues uniquement</span>
+        </label>
+
+        <label class="flex items-center">
+          <input
+            type="checkbox"
+            [checked]="showArchived"
+            (change)="toggleArchived()"
+            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+          <span class="ml-2 text-sm text-gray-700">Inclure archivées</span>
+        </label>
+      </div>
+
+      <!-- Type Filters -->
+      <div class="flex items-center space-x-3">
+        <select
+          formControlName="isSupport"
+          class="text-sm border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">Tous types</option>
+          <option value="true">Support</option>
+          <option value="false">Normales</option>
+        </select>
+
+        <select
+          formControlName="isGroup"
+          class="text-sm border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">Toutes</option>
+          <option value="true">Groupes</option>
+          <option value="false">Individuelles</option>
+        </select>
+      </div>
+
+      <!-- Clear Filters -->
+      <button
+        *ngIf="hasActiveFilters()"
+        type="button"
+        (click)="clearSearch()"
+        class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+        Effacer filtres ({{ getFilterCount() }})
+      </button>
+    </form>
+  </div>
+
+  <!-- Statistics Bar -->
+  <div *ngIf="stats" class="px-4 py-2 bg-blue-50 border-b border-blue-100">
+    <div class="flex items-center justify-between text-sm">
+      <div class="flex items-center space-x-4">
+        <span class="text-blue-800">
+          <i class="fas fa-comments mr-1"></i>
+          {{ stats.totalConversations }} conversations
+        </span>
+        <span class="text-green-800">
+          <i class="fas fa-check-circle mr-1"></i>
+          {{ stats.activeConversations }} actives
+        </span>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <span class="text-yellow-800">
+          <i class="fas fa-envelope mr-1"></i>
+          {{ stats.todayMessages }} aujourd'hui
+        </span>
+        <button
+          (click)="refreshConversations()"
+          class="text-blue-600 hover:text-blue-800">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex items-center justify-center py-8">
+    <div class="flex items-center space-x-3 text-gray-600">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+      <span>Chargement des conversations...</span>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="mx-4 my-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+    <div class="flex items-center">
+      <i class="fas fa-exclamation-triangle text-red-400 mr-3"></i>
+      <div class="text-red-700">{{ error }}</div>
+    </div>
+  </div>
+
+  <!-- Conversations List -->
+  <div class="flex-1 overflow-y-auto custom-scroll">
+    <!-- Empty State -->
+    <div *ngIf="!loading && filteredConversations.length === 0" class="flex flex-col items-center justify-center py-12 px-4">
+      <div class="text-center">
+        <i class="fas fa-comments text-4xl text-gray-400 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">
+          {{ hasActiveFilters() ? 'Aucune conversation trouvée' : 'Aucune conversation' }}
+        </h3>
+        <p class="text-gray-500 mb-6">
+          {{ hasActiveFilters() 
+              ? 'Essayez de modifier vos critères de recherche' 
+              : 'Commencez une nouvelle conversation pour démarrer' }}
+        </p>
+        <button
+          (click)="hasActiveFilters() ? clearSearch() : createNewConversation()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+          {{ hasActiveFilters() ? 'Effacer les filtres' : 'Nouvelle conversation' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <div *ngIf="viewMode === 'list'" class="divide-y divide-gray-100">
+      <div
+        *ngFor="let conversation of filteredConversations; trackBy: trackConversation"
+        (click)="selectConversation(conversation)"
+        [class.bg-blue-50]="selectedConversationId === conversation.id"
+        [class.border-l-4]="selectedConversationId === conversation.id"
+        [class.border-l-blue-500]="selectedConversationId === conversation.id"
+        class="p-4 hover:bg-gray-50 cursor-pointer transition-colors relative">
+        
+        <!-- Conversation Item -->
+        <div class="flex items-start space-x-3">
+          <!-- Avatar Group -->
+          <div class="relative flex-shrink-0">
+            <div class="flex -space-x-2">
+              <img
+                *ngFor="let avatar of getParticipantAvatars(conversation).slice(0, 2); let i = index"
+                [src]="avatar"
+                [alt]="'Participant ' + (i + 1)"
+                class="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                [class.z-10]="i === 0">
+              
+              <!-- More participants indicator -->
+              <div
+                *ngIf="conversation.participants.length > 3"
+                class="w-10 h-10 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center">
+                <span class="text-xs font-medium text-gray-600">
+                  +{{ conversation.participants.length - 2 }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Online Indicator -->
+            <div
+              *ngIf="isConversationOnline(conversation)"
+              class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full">
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <!-- Title -->
+              <h3 class="text-sm font-semibold text-gray-900 truncate">
+                {{ getConversationTitle(conversation) }}
+              </h3>
+
+              <!-- Time and Badges -->
+              <div class="flex items-center space-x-2 flex-shrink-0 ml-2">
+                <!-- Unread Count -->
+                <span
+                  *ngIf="conversation.unreadMessages > 0"
+                  class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                  {{ conversation.unreadMessages > 99 ? '99+' : conversation.unreadMessages }}
+                </span>
+
+                <!-- Time -->
+                <span class="text-xs text-gray-500">
+                  {{ formatTime(conversation.lastMessageDate || conversation.dateCreation) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Last Message or Typing Indicator -->
+            <div class="flex items-center justify-between">
+              <div class="flex-1 min-w-0">
+                <p
+                  *ngIf="!getTypingIndicator(conversation.id)"
+                  class="text-sm text-gray-600 truncate">
+                  {{ getConversationSubtitle(conversation) }}
+                </p>
+                
+                <p
+                  *ngIf="getTypingIndicator(conversation.id)"
+                  class="text-sm text-blue-600 italic">
+                  <i class="fas fa-circle text-xs animate-pulse mr-1"></i>
+                  {{ getTypingIndicator(conversation.id) }}
+                </p>
+              </div>
+
+              <!-- Type Badge -->
+              <span
+                class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full flex-shrink-0 ml-2"
+                [class]="getTypeColor(conversation)">
+                {{ getTypeLabel(conversation) }}
+              </span>
+            </div>
+
+            <!-- Tags -->
+            <div class="flex items-center mt-2 space-x-2">
+              <span
+                *ngIf="conversation.sessionId"
+                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                <i class="fas fa-calendar-alt mr-1"></i>
+                Session
+              </span>
+              
+              <span
+                *ngIf="conversation.archivee"
+                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
+                <i class="fas fa-archive mr-1"></i>
+                Archivée
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Menu -->
+          <div class="flex-shrink-0">
+            <div class="relative">
+              <button
+                class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+                (click)="$event.stopPropagation()">
+                <i class="fas fa-ellipsis-v text-sm"></i>
+              </button>
+              
+              <!-- Dropdown menu (you can expand this with Angular CDK Overlay) -->
+              <div class="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 hidden">
+                <button
+                  (click)="archiveConversation(conversation, $event)"
+                  class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <i class="fas fa-archive mr-2"></i>
+                  {{ conversation.archivee ? 'Désarchiver' : 'Archiver' }}
+                </button>
+                
+                <button
+                  (click)="deleteConversation(conversation, $event)"
+                  class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                  <i class="fas fa-trash mr-2"></i>
+                  Quitter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compact View -->
+    <div *ngIf="viewMode === 'compact'" class="grid grid-cols-1 gap-2 p-2">
+      <div
+        *ngFor="let conversation of filteredConversations; trackBy: trackConversation"
+        (click)="selectConversation(conversation)"
+        [class.bg-blue-50]="selectedConversationId === conversation.id"
+        [class.ring-2]="selectedConversationId === conversation.id"
+        [class.ring-blue-500]="selectedConversationId === conversation.id"
+        class="p-3 bg-white rounded-lg border border-gray-200 hover:shadow-md cursor-pointer transition-all">
+        
+        <div class="flex items-center space-x-3">
+          <!-- Simple Avatar -->
+          <div class="relative flex-shrink-0">
+            <img
+              [src]="getParticipantAvatars(conversation)[0]"
+              alt="Avatar"
+              class="w-8 h-8 rounded-full">
+            
+            <!-- Online Indicator -->
+            <div
+              *ngIf="isConversationOnline(conversation)"
+              class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border border-white rounded-full">
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-medium text-gray-900 truncate">
+                {{ getConversationTitle(conversation) }}
+              </h4>
+              
+              <div class="flex items-center space-x-1 flex-shrink-0 ml-2">
+                <span
+                  *ngIf="conversation.unreadMessages > 0"
+                  class="w-2 h-2 bg-red-500 rounded-full">
+                </span>
+                
+                <span class="text-xs text-gray-500">
+                  {{ formatTime(conversation.lastMessageDate || conversation.dateCreation) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection Status -->
+  <div
+    *ngIf="!(messagingService.connectionStatus$ | async)"
+    class="px-4 py-2 bg-yellow-50 border-t border-yellow-200 flex items-center justify-center">
+    <div class="flex items-center text-yellow-800">
+      <i class="fas fa-exclamation-triangle mr-2"></i>
+      <span class="text-sm">Connexion en cours de rétablissement...</span>
+    </div>
+  </div>
+</div>

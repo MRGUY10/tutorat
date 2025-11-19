@@ -1,0 +1,105 @@
+<div 
+  [ngClass]="{'w-64': isOpen, 'w-16': !isOpen}" 
+  class="bg-white shadow-lg transition-all duration-300 border-r border-gray-200 flex flex-col h-full">
+  
+  <!-- Logo Section -->
+  <div class="p-4 border-b border-gray-200">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+        <span class="text-white font-bold text-lg">E</span>
+      </div>
+      <div *ngIf="isOpen" class="transition-opacity duration-300">
+        <h1 class="text-xl font-bold text-gray-800">EduTutor</h1>
+        <p class="text-sm text-gray-500">Learning Platform</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Section -->
+  <div *ngIf="user" class="p-4 border-b border-gray-200">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center">
+        <span class="text-white font-semibold text-sm">
+          {{ (user.nom?.charAt(0) || '') + (user.prenom?.charAt(0) || '') }}
+        </span>
+      </div>
+      <div *ngIf="isOpen" class="flex-1 transition-opacity duration-300">
+        <p class="text-sm font-semibold text-gray-800">{{ user.prenom }} {{ user.nom }}</p>
+        <p class="text-xs text-gray-500 capitalize">{{ user.role?.toLowerCase() }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+    <div *ngFor="let item of navigationItems" class="nav-item">
+      <!-- Main Navigation Item -->
+      <a 
+        [routerLink]="item.route" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}"
+        class="nav-link flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-gray-50 group relative"
+        [attr.title]="!isOpen ? item.label : null">
+        
+        <!-- Icon -->
+        <div class="w-5 h-5 mr-3 flex items-center justify-center">
+          <i [class]="getIconClass(item.icon)" class="text-gray-500 group-hover:text-blue-600 transition-colors"></i>
+        </div>
+        
+        <!-- Label -->
+        <span *ngIf="isOpen" class="transition-opacity duration-300">{{ item.label }}</span>
+        
+        <!-- Notification Badge -->
+        <div *ngIf="item.badge && item.badge.count > 0" class="ml-auto">
+          <span 
+            class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white rounded-full min-w-[1.25rem] h-5"
+            [ngClass]="{
+              'bg-red-500': item.badge.color === 'red',
+              'bg-blue-500': item.badge.color === 'blue',
+              'bg-green-500': item.badge.color === 'green',
+              'bg-yellow-500': item.badge.color === 'yellow'
+            }">
+            {{ item.badge.count > 99 ? '99+' : item.badge.count }}
+          </span>
+        </div>
+        
+        <!-- Badge for collapsed sidebar (dot indicator) -->
+        <div 
+          *ngIf="item.badge && item.badge.count > 0 && !isOpen" 
+          class="absolute top-0 right-0 w-3 h-3 rounded-full"
+          [ngClass]="{
+            'bg-red-500': item.badge.color === 'red',
+            'bg-blue-500': item.badge.color === 'blue',
+            'bg-green-500': item.badge.color === 'green',
+            'bg-yellow-500': item.badge.color === 'yellow'
+          }">
+        </div>
+        
+        <!-- Dropdown Arrow for items with children -->
+        <svg *ngIf="item.children && isOpen && !item.badge" 
+             class="w-4 h-4 ml-auto text-gray-400 transition-transform duration-200"
+             fill="currentColor" viewBox="0 0 20 20">
+          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+        </svg>
+      </a>
+
+    </div>
+  </nav>
+
+  <!-- Logout Section -->
+  <div class="p-4 border-t border-gray-200">
+    <button 
+      (click)="onLogout()" 
+      class="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 group"
+      [attr.title]="!isOpen ? 'Logout' : null">
+      <div class="w-5 h-5 mr-3 flex items-center justify-center">
+        <svg class="w-5 h-5 text-red-500 group-hover:text-red-700" 
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+      </div>
+      <span *ngIf="isOpen" class="transition-opacity duration-300">Logout</span>
+    </button>
+  </div>
+</div>

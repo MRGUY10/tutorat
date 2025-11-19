@@ -1,0 +1,307 @@
+<div class="session-calendar-container">
+  <!-- Calendar Header -->
+  <div class="calendar-header">
+    <div class="header-left">
+      <h2 class="calendar-title">📅 Calendrier des Sessions</h2>
+      <button 
+        (click)="goToToday()" 
+        class="today-btn"
+        title="Aller à aujourd'hui">
+        Aujourd'hui
+      </button>
+    </div>
+
+    <div class="header-center">
+      <button 
+        (click)="previousPeriod()" 
+        class="nav-btn"
+        title="Période précédente">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      
+      <h3 class="period-title">{{ getCurrentPeriodTitle() }}</h3>
+      
+      <button 
+        (click)="nextPeriod()" 
+        class="nav-btn"
+        title="Période suivante">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="header-right">
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button 
+          (click)="changeView('month')" 
+          [class.active]="viewMode === 'month'"
+          class="view-btn"
+          title="Vue mois">
+          Mois
+        </button>
+        <button 
+          (click)="changeView('week')" 
+          [class.active]="viewMode === 'week'"
+          class="view-btn"
+          title="Vue semaine">
+          Semaine
+        </button>
+        <button 
+          (click)="changeView('day')" 
+          [class.active]="viewMode === 'day'"
+          class="view-btn"
+          title="Vue jour">
+          Jour
+        </button>
+      </div>
+
+      <button 
+        (click)="refreshCalendar()" 
+        class="refresh-btn"
+        title="Actualiser">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement du calendrier...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <p>{{ error }}</p>
+    <button (click)="refreshCalendar()" class="retry-btn">Réessayer</button>
+  </div>
+
+  <!-- Month View -->
+  <div *ngIf="!loading && !error && viewMode === 'month'" class="calendar-grid">
+    <!-- Day Names Header -->
+    <div class="day-names">
+      <div *ngFor="let dayName of dayNames" class="day-name">
+        {{ dayName }}
+      </div>
+    </div>
+
+    <!-- Calendar Weeks -->
+    <div class="weeks-container">
+      <div *ngFor="let week of weeks" class="calendar-week">
+        <div 
+          *ngFor="let day of week.days" 
+          class="calendar-day"
+          [class.other-month]="!day.isCurrentMonth"
+          [class.today]="day.isToday"
+          [class.past]="day.isPast"
+          [class.has-sessions]="hasSessionsOnDay(day)"
+          (click)="selectDate(day)">
+          
+          <div class="day-header">
+            <span class="day-number">{{ day.dayNumber }}</span>
+            <span *ngIf="getSessionCount(day) > 0" class="session-badge">
+              {{ getSessionCount(day) }}
+            </span>
+          </div>
+
+          <div class="day-sessions">
+            <div 
+              *ngFor="let session of day.sessions.slice(0, 3); let i = index" 
+              class="session-item"
+              [ngClass]="getSessionStatusColor(session.statut)"
+              (click)="openSessionDetails(session, $event)">
+              <span class="session-time">{{ formatTime(session.dateHeure) }}</span>
+              <span class="session-type-icon">{{ getSessionTypeIcon(session.typeSession) }}</span>
+            </div>
+            
+            <div 
+              *ngIf="day.sessions.length > 3" 
+              class="more-sessions"
+              (click)="selectDate(day)">
+              +{{ day.sessions.length - 3 }} plus
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Week View -->
+  <div *ngIf="!loading && !error && viewMode === 'week'" class="week-view">
+    <div class="week-grid">
+      <div 
+        *ngFor="let day of weeks[0]?.days" 
+        class="week-day"
+        [class.today]="day.isToday"
+        [class.past]="day.isPast">
+        
+        <div class="week-day-header">
+          <div class="day-name-large">{{ dayNames[day.date.getDay()] }}</div>
+          <div class="day-number-large" [class.today-number]="day.isToday">
+            {{ day.dayNumber }}
+          </div>
+        </div>
+
+        <div class="week-day-sessions">
+          <div 
+            *ngFor="let session of day.sessions" 
+            class="week-session-card"
+            [ngClass]="getSessionStatusColor(session.statut)"
+            (click)="openSessionDetails(session)">
+            
+            <div class="session-time-range">
+              <span class="time-start">{{ formatTime(session.dateHeure) }}</span>
+              <span class="time-duration">{{ formatDuration(session.duree) }}</span>
+            </div>
+            
+            <div class="session-info">
+              <span class="session-type-icon">{{ getSessionTypeIcon(session.typeSession) }}</span>
+              <span class="session-price">{{ session.prix }}€</span>
+            </div>
+          </div>
+
+          <div *ngIf="day.sessions.length === 0" class="no-sessions">
+            Aucune session
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day View -->
+  <div *ngIf="!loading && !error && viewMode === 'day'" class="day-view">
+    <div class="day-view-header">
+      <h3 class="day-view-title">
+        {{ selectedDate | date:'EEEE d MMMM yyyy':'':'fr-FR' }}
+      </h3>
+      <p class="session-count-text">
+        {{ filteredSessions.length }} session{{ filteredSessions.length > 1 ? 's' : '' }}
+      </p>
+    </div>
+
+    <div *ngIf="filteredSessions.length === 0" class="no-sessions-day">
+      <svg class="no-sessions-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+      <p>Aucune session prévue ce jour</p>
+    </div>
+
+    <div class="day-sessions-list">
+      <div 
+        *ngFor="let session of filteredSessions" 
+        class="day-session-card"
+        [ngClass]="getSessionStatusColor(session.statut)"
+        (click)="openSessionDetails(session)">
+        
+        <div class="session-time-info">
+          <div class="time-badge">
+            {{ formatTime(session.dateHeure) }}
+          </div>
+          <div class="duration-badge">
+            {{ formatDuration(session.duree) }}
+          </div>
+        </div>
+
+        <div class="session-details-info">
+          <div class="session-main-info">
+            <span class="session-type-icon-large">{{ getSessionTypeIcon(session.typeSession) }}</span>
+            <div class="session-text">
+              <h4 class="session-subject">Session</h4>
+              <p class="session-status-text">{{ session.statut }}</p>
+            </div>
+          </div>
+
+          <div class="session-meta">
+            <span class="session-price-large">{{ session.prix }}€</span>
+            <button class="view-details-btn" (click)="openSessionDetails(session, $event)">
+              Détails
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Details Modal -->
+  <div *ngIf="showSessionModal && selectedSession" class="modal-overlay" (click)="closeSessionModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Détails de la session</h3>
+        <button (click)="closeSessionModal()" class="close-btn">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-row">
+          <span class="detail-label">Date et heure:</span>
+          <span class="detail-value">{{ selectedSession.dateHeure | date:'dd/MM/yyyy HH:mm':'':'fr-FR' }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Durée:</span>
+          <span class="detail-value">{{ formatDuration(selectedSession.duree) }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Type:</span>
+          <span class="detail-value">
+            {{ getSessionTypeIcon(selectedSession.typeSession) }}
+            {{ selectedSession.typeSession === 'EN_LIGNE' ? 'En ligne' : 'Présentiel' }}
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Statut:</span>
+          <span class="detail-value">
+            <span class="status-badge" [ngClass]="getSessionStatusColor(selectedSession.statut)">
+              {{ selectedSession.statut }}
+            </span>
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Prix:</span>
+          <span class="detail-value price-value">{{ selectedSession.prix }}€</span>
+        </div>
+
+        <div *ngIf="selectedSession.typeSession === 'EN_LIGNE' && selectedSession.lienVisio" class="detail-row">
+          <span class="detail-label">Lien visio:</span>
+          <a [href]="selectedSession.lienVisio" target="_blank" class="visio-link">
+            Rejoindre la session
+          </a>
+        </div>
+
+        <div *ngIf="selectedSession.typeSession === 'PRESENTIEL' && selectedSession.salle" class="detail-row">
+          <span class="detail-label">Salle:</span>
+          <span class="detail-value">{{ selectedSession.salle }}</span>
+        </div>
+
+        <div *ngIf="selectedSession.notes" class="detail-row full-width">
+          <span class="detail-label">Notes:</span>
+          <p class="detail-description">{{ selectedSession.notes }}</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeSessionModal()" class="btn-secondary">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

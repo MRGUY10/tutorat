@@ -1,0 +1,341 @@
+.user-detail-container {
+  .mat-mdc-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .mat-mdc-card-header {
+    &.bg-blue-50 {
+      background-color: #eff6ff;
+      border-bottom: 1px solid #dbeafe;
+    }
+
+    &.bg-green-50 {
+      background-color: #ecfdf5;
+      border-bottom: 1px solid #d1fae5;
+    }
+
+    &.bg-purple-50 {
+      background-color: #faf5ff;
+      border-bottom: 1px solid #e9d5ff;
+    }
+
+    .mat-mdc-card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+  }
+
+  // User avatar styling
+  .user-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  // Button enhancements
+  .mat-mdc-stroked-button {
+    border-radius: 8px;
+    text-transform: none;
+    font-weight: 500;
+    border-width: 1.5px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      transform: none;
+    }
+
+    &.text-red-600 {
+      border-color: #dc2626;
+      color: #dc2626;
+
+      &:hover {
+        background-color: rgba(220, 38, 38, 0.04);
+      }
+    }
+
+    &.text-green-600 {
+      border-color: #059669;
+      color: #059669;
+
+      &:hover {
+        background-color: rgba(5, 150, 105, 0.04);
+      }
+    }
+  }
+
+  .mat-mdc-raised-button {
+    border-radius: 8px;
+    text-transform: none;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .mat-mdc-icon-button {
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+      transform: scale(1.05);
+    }
+  }
+
+  // Tab styling
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-label {
+      border-radius: 8px 8px 0 0;
+      font-weight: 500;
+      text-transform: none;
+    }
+
+    .mat-mdc-tab-body-content {
+      padding: 0;
+    }
+  }
+
+  // Information grid styling
+  .info-grid {
+    .info-item {
+      padding: 16px 0;
+      border-bottom: 1px solid #f3f4f6;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin-bottom: 4px;
+      }
+
+      p {
+        font-size: 1rem;
+        color: #111827;
+        margin: 0;
+      }
+
+      a {
+        color: #3b82f6;
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #1d4ed8;
+        }
+      }
+    }
+  }
+
+  // Status and role badges
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &.active {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    &.inactive {
+      background-color: #f3f4f6;
+      color: #374151;
+    }
+
+    &.suspended {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    &.pending {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+  }
+
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+
+    &.student {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+
+    &.tutor {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+
+    &.admin {
+      background-color: #f3e8ff;
+      color: #7c3aed;
+    }
+  }
+
+  // Activity timeline styling
+  .activity-timeline {
+    .activity-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f3f4f6;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .activity-icon {
+        margin-right: 1rem;
+        padding: 0.5rem;
+        background-color: #f8fafc;
+        border-radius: 50%;
+      }
+
+      .activity-content {
+        flex: 1;
+
+        .activity-title {
+          font-weight: 500;
+          color: #111827;
+          margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+      }
+
+      .activity-date {
+        font-size: 0.875rem;
+        color: #9ca3af;
+      }
+    }
+  }
+
+  // Loading and error states
+  .loading-state,
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+
+    .mat-mdc-progress-spinner {
+      margin-bottom: 1rem;
+    }
+
+    .mat-icon {
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: #111827;
+    }
+
+    p {
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 1024px) {
+    .lg\\:col-span-1,
+    .lg\\:col-span-2 {
+      grid-column: span 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .grid-cols-2 {
+      grid-template-columns: 1fr !important;
+    }
+
+    .md\\:col-span-2 {
+      grid-column: span 1 !important;
+    }
+
+    .mat-mdc-card-header {
+      padding: 1rem;
+    }
+
+    .mat-mdc-card-content {
+      padding: 1rem !important;
+    }
+  }
+  
+  // Animation for page transitions
+  & {
+    animation: fadeInUp 0.4s ease-out;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}

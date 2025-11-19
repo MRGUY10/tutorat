@@ -1,0 +1,21 @@
+# Test Profile Configuration
+spring:
+  application:
+    name: Tutoring Platform Test
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/delegation
+    username: admin
+    password: admin
+  jackson:
+    time-zone: Europe/Paris
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+logging:
+  level:
+    org.springframework.r2dbc: WARN
+    io.r2dbc: WARN
+    com.iiil.tutoring: INFO
+    org.springframework.data.r2dbc: WARN
+    reactor.netty: WARN
+    org.springframework.boot: WARN

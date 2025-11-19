@@ -1,0 +1,79 @@
+header {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  
+  .notification-badge {
+    animation: pulse 2s infinite;
+  }
+  
+  .user-avatar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
+    &:hover {
+      transform: scale(1.05);
+      transition: transform 0.2s ease;
+    }
+  }
+  
+  .header-button {
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  header {
+    padding: 1rem;
+    
+    .user-info {
+      display: none;
+    }
+    
+    .time-display {
+      display: none;
+    }
+  }
+}
+
+// Dark mode support (future enhancement)
+@media (prefers-color-scheme: dark) {
+  header {
+    background-color: rgba(31, 41, 55, 0.95);
+    border-color: rgba(75, 85, 99, 0.3);
+    
+    h1 {
+      color: #f9fafb;
+    }
+    
+    p {
+      color: #d1d5db;
+    }
+    
+    button {
+      color: #d1d5db;
+      
+      &:hover {
+        background-color: rgba(75, 85, 99, 0.3);
+      }
+    }
+  }
+}

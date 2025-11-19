@@ -1,0 +1,77 @@
+# Configuration de l'application
+spring:
+  application:
+    name: Tutoring Platform
+  profiles:
+    active: dev
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    pool:
+      enabled: true
+      initial-size: 10
+      max-size: 20
+      max-idle-time: 30m
+      validation-query: SELECT 1
+  jackson:
+    time-zone: Europe/Paris
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+  validation:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  packagesToScan: com.iiil.tutoring.controller
+  pathsToMatch: /api/**
+
+server:
+  port: 8080
+logging:
+  level:
+    root: INFO
+    com.iiil.tutoring: DEBUG
+    org.springframework.r2dbc: DEBUG
+    org.springframework.r2dbc.core: DEBUG
+    org.springframework.data.r2dbc.core.DefaultDatabaseClient: DEBUG
+    io.r2dbc.postgresql.QUERY: DEBUG
+    io.r2dbc.postgresql.PARAM: DEBUG
+    org.springframework.transaction: DEBUG
+    org.springframework.r2dbc.connection: DEBUG
+    reactor.netty: INFO
+
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+# JWT Configuration
+jwt:
+  secret: dHV0b3JpbmdwbGF0Zm9ybXNlY3JldGtleWZvcmp3dHRva2Vuc3doaWNoc2hvdWxkYmV2ZXJ5bG9uZ2FuZHNlY3VyZQ==
+  expiration: 86400000  # 24 hours
+  refresh-expiration: 604800000  # 7 days
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  security:
+    user:
+      name: admin
+      password: admin123
+      roles: ADMIN

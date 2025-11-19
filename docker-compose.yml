@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: ./backend/Tutoring Platform
+      dockerfile: Dockerfile
+    container_name: tutoring-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=tutoring
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - tutoring-net
+
+  frontend:
+    platform: linux/amd64
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    container_name: tutoring-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - tutoring-net
+
+  db:
+    image: postgres:15
+    platform: linux/amd64
+    container_name: tutoring-db
+    environment:
+      - POSTGRES_DB=tutoring
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - tutoring-net
+
+volumes:
+  db_data:
+
+networks:
+  tutoring-net:
+    driver: bridge

@@ -1,0 +1,59 @@
+# Development Profile Configuration
+spring:
+  application:
+    name: Tutoring Platform Development
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    pool:
+      enabled: true
+      initial-size: 10
+      max-size: 20
+      max-idle-time: 30m
+      validation-query: SELECT 1
+
+    jackson:
+    time-zone: Europe/Paris
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+
+  validation:
+    enabled: true
+server:
+  port: 8080
+logging:
+  level:
+    root: INFO
+    com.iiil.tutoring: DEBUG
+    org.springframework.r2dbc: DEBUG
+    org.springframework.r2dbc.core: DEBUG
+    org.springframework.data.r2dbc.core.DefaultDatabaseClient: DEBUG
+    io.r2dbc.postgresql.QUERY: DEBUG
+    io.r2dbc.postgresql.PARAM: DEBUG
+    org.springframework.transaction: DEBUG
+    org.springframework.r2dbc.connection: DEBUG
+    reactor.netty: INFO
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Swagger/OpenAPI Configuration
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  packagesToScan: com.iiil.tutoring.controller
+  pathsToMatch: /api/**
