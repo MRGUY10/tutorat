@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { Observable, BehaviorSubject, Subject, interval, fromEvent } from 'rxjs';
-import { map, catchError, tap, filter, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
+  private readonly apiUrl = environment.BASE_URL + '/api/chat';
+  private readonly wsUrl = environment.BASE_URL.replace('http', 'ws') + '/ws/chat';
 import {
   Conversation,
   MessageResponse,

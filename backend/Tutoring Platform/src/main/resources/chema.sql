@@ -1,3 +1,30 @@
+-- Fonction générique de mise à jour du champ updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Fonction pour les évaluations
+CREATE OR REPLACE FUNCTION update_evaluations_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Fonction pour les specialites des tuteurs
+CREATE OR REPLACE FUNCTION update_tutor_specialites_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 create table roles
 (
     id          bigserial
@@ -14,7 +41,7 @@ create table roles
 );
 
 alter table roles
-    owner to admin;
+    owner to postgres;
 
 create trigger update_roles_updated_at
     before update
@@ -46,7 +73,7 @@ create table users
 comment on table users is 'Base users table containing common information for all user types';
 
 alter table users
-    owner to admin;
+    owner to postgres;
 
 create index idx_users_email
     on users (email);
@@ -80,7 +107,7 @@ create table matieres
 );
 
 alter table matieres
-    owner to admin;
+    owner to postgres;
 
 create index idx_matieres_domaine
     on matieres (domaine);
@@ -113,7 +140,7 @@ create table etudiants
 comment on table etudiants is 'Students table with academic information';
 
 alter table etudiants
-    owner to admin;
+    owner to postgres;
 
 create table admins
 (
@@ -128,7 +155,7 @@ create table admins
 comment on table admins is 'Administrators table with permissions and department info';
 
 alter table admins
-    owner to admin;
+    owner to postgres;
 
 create table user_roles
 (
@@ -146,7 +173,7 @@ create table user_roles
 );
 
 alter table user_roles
-    owner to admin;
+    owner to postgres;
 
 create table demande_sessions
 (
@@ -183,7 +210,7 @@ create table demande_sessions
 );
 
 alter table demande_sessions
-    owner to admin;
+    owner to postgres;
 
 create table sessions
 (
@@ -238,7 +265,7 @@ create table sessions
 comment on table sessions is 'Tutoring sessions with scheduling and status information';
 
 alter table sessions
-    owner to admin;
+    owner to postgres;
 
 create index idx_sessions_tuteur
     on sessions (tuteur_id);
@@ -322,7 +349,7 @@ comment on column evaluations.patience is 'Patience rating (1-5)';
 comment on column evaluations.recommanderais is 'Would recommend this person';
 
 alter table evaluations
-    owner to admin;
+    owner to postgres;
 
 create index idx_evaluations_session
     on evaluations (session_id);
@@ -369,7 +396,7 @@ create table paiements
 comment on table paiements is 'Payment tracking for tutoring sessions';
 
 alter table paiements
-    owner to admin;
+    owner to postgres;
 
 create table planning
 (
@@ -393,7 +420,7 @@ create table planning
 comment on table planning is 'Weekly availability schedules for tutors';
 
 alter table planning
-    owner to admin;
+    owner to postgres;
 
 create index idx_planning_tuteur
     on planning (tuteur_id);
@@ -432,7 +459,7 @@ create table creneaux_disponibles
 comment on table creneaux_disponibles is 'Specific time slots available for booking';
 
 alter table creneaux_disponibles
-    owner to admin;
+    owner to postgres;
 
 create table conversations
 (
@@ -451,7 +478,7 @@ create table conversations
 comment on table conversations is 'Chat conversations between users';
 
 alter table conversations
-    owner to admin;
+    owner to postgres;
 
 create table conversation_participants
 (
@@ -473,7 +500,7 @@ create table conversation_participants
 );
 
 alter table conversation_participants
-    owner to admin;
+    owner to postgres;
 
 create table messages
 (
@@ -500,7 +527,7 @@ create table messages
 comment on table messages is 'Individual messages within conversations';
 
 alter table messages
-    owner to admin;
+    owner to postgres;
 
 create index idx_messages_conversation
     on messages (conversation_id);
@@ -536,7 +563,7 @@ create table notifications
 comment on table notifications is 'System notifications for users';
 
 alter table notifications
-    owner to admin;
+    owner to postgres;
 
 create index idx_notifications_user
     on notifications (user_id);
@@ -568,7 +595,7 @@ create table user_audit_logs
 );
 
 alter table user_audit_logs
-    owner to admin;
+    owner to postgres;
 
 create table tutors
 (
@@ -617,7 +644,7 @@ create table tutors
 comment on table tutors is 'Tutors table with teaching-specific information and ratings. ID references users table.';
 
 alter table tutors
-    owner to admin;
+    owner to postgres;
 
 create table tutor_specialites
 (
@@ -638,7 +665,7 @@ create table tutor_specialites
 );
 
 alter table tutor_specialites
-    owner to admin;
+    owner to postgres;
 
 create index idx_tutor_specialites_tutor_id
     on tutor_specialites (tutor_id);
