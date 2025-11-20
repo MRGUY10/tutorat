@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { Observable, BehaviorSubject, Subject, interval, fromEvent } from 'rxjs';
 import { map, catchError, tap, filter, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -28,8 +29,8 @@ import {
   providedIn: 'root'
 })
 export class MessagingService {
-  private readonly apiUrl = 'http://localhost:8080/api/chat';
-  private readonly wsUrl = 'ws://localhost:8080/ws/chat';
+  private readonly apiUrl = environment.BASE_URL + '/api/chat';
+  private readonly wsUrl = environment.BASE_URL.replace('http', 'ws') + '/ws/chat';
   
   // WebSocket connection
   private ws: WebSocket | null = null;
