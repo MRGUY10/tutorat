@@ -1,10 +1,11 @@
 const { spawn } = require('child_process');
 
 const port = process.env.PORT || '10000';
-const ngCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const command = `npx ng serve --host 0.0.0.0 --port ${port}`;
 
-const child = spawn(ngCommand, ['ng', 'serve', '--host', '0.0.0.0', '--port', port], {
-  stdio: 'inherit'
+const child = spawn(command, {
+  stdio: 'inherit',
+  shell: true
 });
 
 child.on('exit', (code) => {
