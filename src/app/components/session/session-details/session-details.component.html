@@ -1,0 +1,480 @@
+<!-- Session Details Component -->
+<div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex items-center justify-center py-12">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+      <p class="text-gray-600">Chargement des détails de la session...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="flex items-center justify-center py-12">
+    <div class="text-center">
+      <span class="material-icons text-6xl text-red-400 mb-4">error_outline</span>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
+      <p class="text-gray-600 mb-4">{{ error }}</p>
+      <button
+        (click)="loadSession()"
+        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <span class="material-icons mr-2">refresh</span>
+        Réessayer
+      </button>
+    </div>
+  </div>
+
+  <!-- Session Content -->
+  <div *ngIf="session && !loading && !error">
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button
+            (click)="onBack()"
+            class="inline-flex items-center text-blue-100 hover:text-white transition-colors">
+            <span class="material-icons mr-2">arrow_back</span>
+            Retour
+          </button>
+          
+          <div>
+            <h1 class="text-2xl font-bold text-white">Détails de la session</h1>
+            <p class="text-blue-100 mt-1">{{ formatDate(session.dateHeure) }}</p>
+          </div>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="flex items-center space-x-3">
+          <span [ngClass]="getStatusColor()" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white">
+            {{ getStatusDisplay(session.statut) }}
+          </span>
+          
+          <div class="flex items-center text-white">
+            <span class="material-icons mr-1">{{ getTypeIcon() }}</span>
+            <span class="text-sm">{{ getTypeDisplay(session.typeSession) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <div class="flex space-x-3">
+          <button
+            *ngIf="canJoinSession()"
+            (click)="onJoinSession()"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <span class="material-icons mr-2">{{ getTypeIcon() }}</span>
+            Rejoindre la session
+          </button>
+
+          <button
+            *ngIf="canStartSession()"
+            (click)="onStartSession()"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <span class="material-icons mr-2">play_arrow</span>
+            Démarrer
+          </button>
+
+          <button
+            *ngIf="canCompleteSession()"
+            (click)="onCompleteSession()"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <span class="material-icons mr-2">check_circle</span>
+            Terminer
+          </button>
+
+          <button
+            *ngIf="canCancelSession()"
+            (click)="onCancelSession()"
+            class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            <span class="material-icons mr-2">cancel</span>
+            Annuler
+          </button>
+        </div>
+
+        <div class="flex space-x-2">
+          <button
+            *ngIf="canEditSession() && !isEditing"
+            (click)="onStartEdit()"
+            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <span class="material-icons mr-2">edit</span>
+            Modifier
+          </button>
+
+          <div *ngIf="isEditing" class="flex space-x-2">
+            <button
+              (click)="onSaveChanges()"
+              [disabled]="!isFormValid() || saving"
+              class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <span class="material-icons mr-2" [class.animate-spin]="saving">{{ saving ? 'hourglass_empty' : 'save' }}</span>
+              Sauvegarder
+            </button>
+
+            <button
+              (click)="onCancelEdit()"
+              [disabled]="saving"
+              class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors">
+              <span class="material-icons mr-2">close</span>
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200">
+      <nav class="flex space-x-8 px-6" aria-label="Tabs">
+        <button
+          (click)="onTabChange('details')"
+          [class.border-blue-500]="activeTab === 'details'"
+          [class.text-blue-600]="activeTab === 'details'"
+          [class.text-gray-500]="activeTab !== 'details'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+          <span class="material-icons text-sm mr-1">info</span>
+          Détails
+        </button>
+
+        <button
+          (click)="onTabChange('notes')"
+          [class.border-blue-500]="activeTab === 'notes'"
+          [class.text-blue-600]="activeTab === 'notes'"
+          [class.text-gray-500]="activeTab !== 'notes'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+          <span class="material-icons text-sm mr-1">note</span>
+          Notes
+        </button>
+
+        <button
+          (click)="onTabChange('history')"
+          [class.border-blue-500]="activeTab === 'history'"
+          [class.text-blue-600]="activeTab === 'history'"
+          [class.text-gray-500]="activeTab !== 'history'"
+          class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm hover:text-gray-700 hover:border-gray-300 transition-colors">
+          <span class="material-icons text-sm mr-1">history</span>
+          Historique
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="px-6 py-6">
+      
+      <!-- Details Tab -->
+      <div *ngIf="activeTab === 'details'">
+        <form *ngIf="isEditing" [formGroup]="editForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Date and Time -->
+            <div>
+              <label for="dateHeure" class="block text-sm font-medium text-gray-700 mb-2">
+                Date et heure
+              </label>
+              <input
+                type="datetime-local"
+                id="dateHeure"
+                formControlName="dateHeure"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <div *ngIf="getFieldError('dateHeure')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('dateHeure') }}
+              </div>
+            </div>
+
+            <!-- Duration -->
+            <div>
+              <label for="duree" class="block text-sm font-medium text-gray-700 mb-2">
+                Durée (minutes)
+              </label>
+              <input
+                type="number"
+                id="duree"
+                formControlName="duree"
+                min="15"
+                max="480"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <div *ngIf="getFieldError('duree')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('duree') }}
+              </div>
+            </div>
+
+            <!-- Price -->
+            <div>
+              <label for="prix" class="block text-sm font-medium text-gray-700 mb-2">
+                Prix (€)
+              </label>
+              <input
+                type="number"
+                id="prix"
+                formControlName="prix"
+                min="0"
+                step="0.01"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <div *ngIf="getFieldError('prix')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('prix') }}
+              </div>
+            </div>
+
+            <!-- Type -->
+            <div>
+              <label for="typeSession" class="block text-sm font-medium text-gray-700 mb-2">
+                Type de session
+              </label>
+              <select
+                id="typeSession"
+                formControlName="typeSession"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">Sélectionner un type</option>
+                <option value="EN_LIGNE">En ligne</option>
+                <option value="PRESENTIEL">Présentiel</option>
+              </select>
+              <div *ngIf="getFieldError('typeSession')" class="mt-1 text-sm text-red-600">
+                {{ getFieldError('typeSession') }}
+              </div>
+            </div>
+
+            <!-- Video Link (for online sessions) -->
+            <div *ngIf="editForm.get('typeSession')?.value === 'EN_LIGNE'">
+              <label for="lienVisio" class="block text-sm font-medium text-gray-700 mb-2">
+                Lien de visioconférence
+              </label>
+              <input
+                type="url"
+                id="lienVisio"
+                formControlName="lienVisio"
+                placeholder="https://meet.google.com/..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+            <!-- Room (for in-person sessions) -->
+            <div *ngIf="editForm.get('typeSession')?.value === 'PRESENTIEL'">
+              <label for="salle" class="block text-sm font-medium text-gray-700 mb-2">
+                Lieu / Salle
+              </label>
+              <input
+                type="text"
+                id="salle"
+                formControlName="salle"
+                placeholder="Adresse ou nom de la salle"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+
+          </div>
+
+          <!-- Notes -->
+          <div>
+            <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+              Notes
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              rows="4"
+              placeholder="Notes ou instructions pour la session..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+          </div>
+
+        </form>
+
+        <!-- Read-only Details -->
+        <div *ngIf="!isEditing" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Basic Information -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">Informations générales</h3>
+              <dl class="space-y-2">
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Date et heure:</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ formatDate(session.dateHeure) }}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Durée:</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ formatDuration(session.duree) }}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Prix:</dt>
+                  <dd class="text-sm font-medium text-gray-900">{{ formatPrice(session.prix) }}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Type:</dt>
+                  <dd class="text-sm font-medium text-gray-900 flex items-center">
+                    <span class="material-icons text-sm mr-1">{{ getTypeIcon() }}</span>
+                    {{ getTypeDisplay(session.typeSession) }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <!-- Participants -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">Participants</h3>
+              <dl class="space-y-3">
+                <div>
+                  <dt class="text-sm text-gray-600 mb-1">Tuteur:</dt>
+                  <dd class="text-sm font-medium text-gray-900 flex items-start space-x-2">
+                    <span class="material-icons text-sm mr-2 mt-0.5">person</span>
+                    <div>
+                      <div class="font-semibold">{{ session.participantNames?.tutorName || (session.tuteurPrenom + ' ' + session.tuteurNom) }}</div>
+                      <div class="text-gray-600 text-xs">{{ session.tuteurEmail }}</div>
+                      <div *ngIf="session.tuteurTelephone" class="text-gray-600 text-xs">{{ session.tuteurTelephone }}</div>
+                      <div *ngIf="session.tuteurSpecialite" class="text-blue-600 text-xs">Spécialité: {{ session.tuteurSpecialite }}</div>
+                    </div>
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-sm text-gray-600 mb-1">Étudiant:</dt>
+                  <dd class="text-sm font-medium text-gray-900 flex items-start space-x-2">
+                    <span class="material-icons text-sm mr-2 mt-0.5">school</span>
+                    <div>
+                      <div class="font-semibold">{{ session.participantNames?.studentName || (session.etudiantPrenom + ' ' + session.etudiantNom) }}</div>
+                      <div class="text-gray-600 text-xs">{{ session.etudiantEmail }}</div>
+                      <div *ngIf="session.etudiantTelephone" class="text-gray-600 text-xs">{{ session.etudiantTelephone }}</div>
+                    </div>
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-sm text-gray-600 mb-1">Matière:</dt>
+                  <dd class="text-sm font-medium text-gray-900 flex items-center">
+                    <span class="material-icons text-sm mr-2">book</span>
+                    <div class="font-semibold">{{ session.participantNames?.subjectName || session.matiereNom }}</div>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <!-- Location / Access -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                {{ session.typeSession === 'EN_LIGNE' ? 'Accès en ligne' : 'Lieu de rendez-vous' }}
+              </h3>
+              
+              <div *ngIf="session.typeSession === 'EN_LIGNE'">
+                <div *ngIf="session.lienVisio" class="mb-3">
+                  <dt class="text-sm text-gray-600 mb-1">Lien de visioconférence:</dt>
+                  <dd class="text-sm">
+                    <a [href]="session.lienVisio" target="_blank" class="text-blue-600 hover:text-blue-800 flex items-center">
+                      <span class="material-icons text-sm mr-1">videocam</span>
+                      Rejoindre la session
+                      <span class="material-icons text-sm ml-1">open_in_new</span>
+                    </a>
+                  </dd>
+                </div>
+                <div *ngIf="!session.lienVisio" class="text-sm text-gray-500">
+                  Lien de visioconférence à définir
+                </div>
+              </div>
+
+              <div *ngIf="session.typeSession === 'PRESENTIEL'">
+                <div *ngIf="session.salle" class="mb-3">
+                  <dt class="text-sm text-gray-600 mb-1">Adresse:</dt>
+                  <dd class="text-sm font-medium text-gray-900 flex items-center">
+                    <span class="material-icons text-sm mr-1">location_on</span>
+                    {{ session.salle }}
+                  </dd>
+                </div>
+                <div *ngIf="!session.salle" class="text-sm text-gray-500">
+                  Lieu de rendez-vous à définir
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Notes Section -->
+          <div *ngIf="session.notes" class="bg-blue-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+              <span class="material-icons mr-2">note</span>
+              Notes
+            </h3>
+            <p class="text-gray-700 whitespace-pre-wrap">{{ session.notes }}</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Notes Tab -->
+      <div *ngIf="activeTab === 'notes'">
+        <form [formGroup]="notesForm" class="space-y-4">
+          <div>
+            <label for="sessionNotes" class="block text-sm font-medium text-gray-700 mb-2">
+              Notes de session
+            </label>
+            <textarea
+              id="sessionNotes"
+              formControlName="notes"
+              rows="8"
+              placeholder="Ajoutez vos notes sur cette session..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            <div class="mt-2 text-sm text-gray-500">
+              {{ (notesForm.get('notes')?.value?.length || 0) }}/1000 caractères
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button
+              type="button"
+              (click)="onSaveNotes()"
+              [disabled]="saving || !notesForm.dirty"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <span class="material-icons mr-2" [class.animate-spin]="saving">{{ saving ? 'hourglass_empty' : 'save' }}</span>
+              Sauvegarder les notes
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- History Tab -->
+      <div *ngIf="activeTab === 'history'">
+        <div class="text-center py-8">
+          <span class="material-icons text-6xl text-gray-300 mb-4">history</span>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Historique des modifications</h3>
+          <p class="text-gray-600">L'historique des modifications sera disponible prochainement.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Confirmation Dialog -->
+<div *ngIf="showConfirmDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">Confirmation</h3>
+    </div>
+    
+    <div class="px-6 py-4">
+      <p class="text-gray-600">{{ getConfirmMessage() }}</p>
+    </div>
+    
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+      <button
+        (click)="onCancelAction()"
+        [disabled]="saving"
+        class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors">
+        Annuler
+      </button>
+      
+      <button
+        (click)="onConfirmAction()"
+        [disabled]="saving"
+        [class.bg-red-600]="confirmAction === 'cancel'"
+        [class.hover:bg-red-700]="confirmAction === 'cancel'"
+        [class.bg-green-600]="confirmAction === 'complete'"
+        [class.hover:bg-green-700]="confirmAction === 'complete'"
+        [class.bg-blue-600]="confirmAction === 'start'"
+        [class.hover:bg-blue-700]="confirmAction === 'start'"
+        class="inline-flex items-center px-4 py-2 text-white rounded-lg disabled:opacity-50 transition-colors">
+        <span class="material-icons mr-2" [class.animate-spin]="saving">
+          {{ saving ? 'hourglass_empty' : 'check' }}
+        </span>
+        {{ getActionButtonText() }}
+      </button>
+    </div>
+  </div>
+</div>

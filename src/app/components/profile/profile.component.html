@@ -1,0 +1,581 @@
+<div class="profile-container bg-gray-50 py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
+      <span class="ml-3 text-gray-600">Chargement du profil...</span>
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="!isLoading && profile" class="animate-fade-in">
+      <!-- Success/Error Messages -->
+      <div *ngIf="successMessage" class="alert alert-success mb-4">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-error mb-4">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Profile Header -->
+      <div class="profile-header rounded-t-2xl p-8 text-white shadow-lg">
+        <div class="flex flex-col md:flex-row items-center gap-6">
+          <!-- Profile Photo -->
+          <div class="relative">
+            <img 
+              [src]="profile.photo || DEFAULT_AVATAR" 
+              [alt]="profile.nom + ' ' + profile.prenom"
+              class="profile-avatar"
+            />
+            <div *ngIf="isTutorProfile(profile) && profile.verifie" 
+                 class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2"
+                 title="Tuteur vérifié">
+              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Profile Info -->
+          <div class="flex-1 text-center md:text-left">
+            <h1 class="text-3xl font-bold mb-2">{{ profile.prenom }} {{ profile.nom }}</h1>
+            <p class="text-indigo-100 text-lg mb-3">{{ profile.email }}</p>
+            
+            <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+              <span class="badge badge-success" *ngIf="profile.statut === 'ACTIVE'">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Actif
+              </span>
+              
+              <span class="badge badge-info">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path>
+                </svg>
+                {{ userType === 'tutor' ? 'Tuteur' : userType === 'student' ? 'Étudiant' : 'Administrateur' }}
+              </span>
+
+              <span class="badge badge-verified" *ngIf="isTutorProfile(profile) && profile.verifie">
+                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                Vérifié
+              </span>
+            </div>
+
+            <!-- Profile Completion (if available) -->
+            <div *ngIf="isTutorProfile(profile) && profile.profileCompletion !== undefined" class="mt-4">
+              <div class="flex items-center gap-2 text-sm text-indigo-100">
+                <span>Profil complété à {{ profile.profileCompletion }}%</span>
+              </div>
+              <div class="profile-completion mt-2">
+                <div class="profile-completion-bar" [style.width.%]="profile.profileCompletion"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col gap-2">
+            <button *ngIf="!isEditing" (click)="toggleEdit()" class="btn btn-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Modifier
+            </button>
+            <button *ngIf="!isChangingPassword" (click)="isChangingPassword = true" class="btn btn-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+              </svg>
+              Mot de passe
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Stats for Tutor -->
+      <div *ngIf="isTutorProfile(profile)" class="grid md:grid-cols-4 gap-4 -mt-8 px-4 mb-6">
+        <div class="stat-card">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Note moyenne</p>
+              <p class="text-2xl font-bold text-gray-800">{{ profile.noteMoyenne }}</p>
+            </div>
+            <div class="star-rating text-3xl">
+              ⭐
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Évaluations</p>
+              <p class="text-2xl font-bold text-gray-800">{{ profile.nombreEvaluations }}</p>
+            </div>
+            <svg class="w-10 h-10 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Tarif/heure</p>
+              <p class="text-2xl font-bold text-gray-800">{{ profile.tarifHoraire }}€</p>
+            </div>
+            <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-500 text-sm">Disponibilité</p>
+              <p class="text-2xl font-bold" [class.text-green-600]="profile.disponible" [class.text-gray-400]="!profile.disponible">
+                {{ profile.disponible ? 'Disponible' : 'Indisponible' }}
+              </p>
+            </div>
+            <svg class="w-10 h-10" [class.text-green-500]="profile.disponible" [class.text-gray-400]="!profile.disponible" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Profile Information (View Mode) -->
+        <div *ngIf="!isEditing" class="lg:col-span-2">
+          <!-- Student Profile -->
+          <div *ngIf="isStudentProfile(profile)" class="form-section">
+            <h2 class="form-section-title">Informations académiques</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Filière</label>
+                <p class="text-lg font-semibold text-gray-800">{{ profile.filiere }}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Année d'études</label>
+                <p class="text-lg font-semibold text-gray-800">{{ profile.annee }}ème année</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Niveau</label>
+                <p class="text-lg font-semibold text-gray-800">{{ profile.niveau }}</p>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-gray-600">Téléphone</label>
+                <p class="text-lg font-semibold text-gray-800">{{ profile.telephone || 'Non renseigné' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tutor Profile -->
+          <div *ngIf="isTutorProfile(profile)">
+            <!-- Experience & Description -->
+            <div class="form-section">
+              <h2 class="form-section-title">À propos</h2>
+              <div class="space-y-4">
+                <div *ngIf="profile.description">
+                  <label class="text-sm font-medium text-gray-600">Description</label>
+                  <p class="text-gray-700 leading-relaxed">{{ profile.description }}</p>
+                </div>
+                <div *ngIf="profile.experience">
+                  <label class="text-sm font-medium text-gray-600">Expérience</label>
+                  <p class="text-gray-700 leading-relaxed">{{ profile.experience }}</p>
+                </div>
+                <div *ngIf="profile.diplomes">
+                  <label class="text-sm font-medium text-gray-600">Diplômes</label>
+                  <p class="text-gray-700 leading-relaxed">{{ profile.diplomes }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Specialties -->
+            <div class="form-section">
+              <h2 class="form-section-title">Spécialités</h2>
+              <div class="flex flex-wrap gap-2">
+                <span *ngFor="let specialite of profile.specialites" class="specialty-tag">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253z"></path>
+                  </svg>
+                  {{ specialite.matiereName }}
+                  <span class="text-xs text-gray-500">({{ specialite.niveau }})</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Location & Course Modes -->
+            <div class="form-section">
+              <h2 class="form-section-title">Localisation & Modalités</h2>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div *ngIf="profile.ville || profile.pays">
+                  <label class="text-sm font-medium text-gray-600">Localisation</label>
+                  <p class="text-lg font-semibold text-gray-800">
+                    {{ profile.ville }}{{ profile.ville && profile.pays ? ', ' : '' }}{{ profile.pays }}
+                  </p>
+                </div>
+                <div>
+                  <label class="text-sm font-medium text-gray-600">Modes de cours</label>
+                  <div class="flex gap-2 mt-1">
+                    <span *ngIf="profile.coursEnLigne" class="badge badge-info">En ligne</span>
+                    <span *ngIf="profile.coursPresentiel" class="badge badge-info">Présentiel</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Edit Form -->
+        <div *ngIf="isEditing" class="lg:col-span-2">
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form-section">
+            <h2 class="form-section-title">Modifier le profil</h2>
+            
+            <!-- Basic Info -->
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                <input 
+                  type="text" 
+                  id="nom" 
+                  formControlName="nom"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <div *ngIf="profileForm.get('nom')?.invalid && profileForm.get('nom')?.touched" class="text-red-500 text-sm mt-1">
+                  Le nom est requis
+                </div>
+              </div>
+
+              <div>
+                <label for="prenom" class="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
+                <input 
+                  type="text" 
+                  id="prenom" 
+                  formControlName="prenom"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <div *ngIf="profileForm.get('prenom')?.invalid && profileForm.get('prenom')?.touched" class="text-red-500 text-sm mt-1">
+                  Le prénom est requis
+                </div>
+              </div>
+
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  readonly
+                />
+                <p class="text-xs text-gray-500 mt-1">L'email ne peut pas être modifié</p>
+              </div>
+
+              <div>
+                <label for="telephone" class="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+                <input 
+                  type="tel" 
+                  id="telephone" 
+                  formControlName="telephone"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="+33 1 23 45 67 89"
+                />
+              </div>
+            </div>
+
+            <!-- Student Fields -->
+            <div *ngIf="isStudentProfile(profile)" class="grid md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label for="filiere" class="block text-sm font-medium text-gray-700 mb-2">Filière *</label>
+                <input 
+                  type="text" 
+                  id="filiere" 
+                  formControlName="filiere"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label for="annee" class="block text-sm font-medium text-gray-700 mb-2">Année *</label>
+                <select 
+                  id="annee" 
+                  formControlName="annee"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="1">1ère année</option>
+                  <option value="2">2ème année</option>
+                  <option value="3">3ème année</option>
+                  <option value="4">4ème année</option>
+                  <option value="5">5ème année</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="niveau" class="block text-sm font-medium text-gray-700 mb-2">Niveau *</label>
+                <select 
+                  id="niveau" 
+                  formControlName="niveau"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="DEBUTANT">Débutant</option>
+                  <option value="INTERMEDIAIRE">Intermédiaire</option>
+                  <option value="AVANCE">Avancé</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tutor Fields -->
+            <div *ngIf="isTutorProfile(profile)" class="space-y-4 mb-4">
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label for="tarifHoraire" class="block text-sm font-medium text-gray-700 mb-2">Tarif horaire (€) *</label>
+                  <input 
+                    type="number" 
+                    id="tarifHoraire" 
+                    formControlName="tarifHoraire"
+                    min="5"
+                    step="0.01"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Disponibilité</label>
+                  <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="disponible" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="ml-2 text-gray-700">Je suis disponible pour de nouvelles sessions</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label for="ville" class="block text-sm font-medium text-gray-700 mb-2">Ville</label>
+                  <input 
+                    type="text" 
+                    id="ville" 
+                    formControlName="ville"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label for="pays" class="block text-sm font-medium text-gray-700 mb-2">Pays</label>
+                  <input 
+                    type="text" 
+                    id="pays" 
+                    formControlName="pays"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Modes de cours</label>
+                <div class="space-y-2">
+                  <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="coursEnLigne" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="ml-2 text-gray-700">Cours en ligne</span>
+                  </label>
+                  <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" formControlName="coursPresentiel" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="ml-2 text-gray-700">Cours en présentiel</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label for="experience" class="block text-sm font-medium text-gray-700 mb-2">Expérience</label>
+                <textarea 
+                  id="experience" 
+                  formControlName="experience"
+                  rows="4"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Décrivez votre expérience..."
+                ></textarea>
+              </div>
+
+              <div>
+                <label for="diplomes" class="block text-sm font-medium text-gray-700 mb-2">Diplômes</label>
+                <textarea 
+                  id="diplomes" 
+                  formControlName="diplomes"
+                  rows="3"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Listez vos diplômes..."
+                ></textarea>
+              </div>
+
+              <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea 
+                  id="description" 
+                  formControlName="description"
+                  rows="4"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Présentez-vous..."
+                ></textarea>
+              </div>
+
+              <!-- Specialties Selection -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Spécialités *</label>
+                <div class="matiere-grid">
+                  <div 
+                    *ngFor="let matiere of matieres"
+                    (click)="toggleMatiereSelection(matiere.id)"
+                    [class.selected]="isMatiereSelected(matiere.id)"
+                    class="matiere-card"
+                  >
+                    <div class="font-medium text-sm">{{ matiere.nom }}</div>
+                    <div class="text-xs text-gray-500">{{ matiere.niveau }}</div>
+                    <svg *ngIf="isMatiereSelected(matiere.id)" class="w-5 h-5 text-indigo-600 mt-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div *ngIf="selectedMatieres.length === 0" class="text-red-500 text-sm mt-2">
+                  Veuillez sélectionner au moins une spécialité
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex gap-3 justify-end pt-4 border-t border-gray-200">
+              <button type="button" (click)="toggleEdit()" class="btn btn-secondary" [disabled]="isSaving">
+                Annuler
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isSaving || (isTutorProfile(profile) && selectedMatieres.length === 0)">
+                <span *ngIf="isSaving" class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+                <svg *ngIf="!isSaving" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Photo Upload -->
+          <div class="form-section">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Photo de profil</h3>
+            <div class="text-center">
+              <img 
+                [src]="photoPreview || profile.photo || DEFAULT_AVATAR" 
+                alt="Profile preview"
+                class="photo-upload-preview mx-auto mb-4"
+              />
+              <input 
+                type="file" 
+                #fileInput
+                (change)="onFileSelected($event)" 
+                accept="image/*"
+                class="hidden"
+              />
+              <button type="button" (click)="fileInput.click()" class="btn btn-secondary w-full mb-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Choisir une photo
+              </button>
+              <button 
+                *ngIf="selectedFile" 
+                type="button" 
+                (click)="uploadPhoto()" 
+                class="btn btn-primary w-full"
+                [disabled]="isSaving"
+              >
+                <span *ngIf="isSaving" class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+                {{ isSaving ? 'Upload...' : 'Télécharger' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Password Change -->
+          <div *ngIf="isChangingPassword" class="form-section">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Changer le mot de passe</h3>
+            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="space-y-4">
+              <div>
+                <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-2">Mot de passe actuel *</label>
+                <input 
+                  type="password" 
+                  id="currentPassword" 
+                  formControlName="currentPassword"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-2">Nouveau mot de passe *</label>
+                <input 
+                  type="password" 
+                  id="newPassword" 
+                  formControlName="newPassword"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <div *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched" class="text-red-500 text-sm mt-1">
+                  <div *ngIf="passwordForm.get('newPassword')?.errors?.['minlength']">Minimum 8 caractères</div>
+                  <div *ngIf="passwordForm.get('newPassword')?.errors?.['pattern']">Doit contenir majuscule, minuscule et chiffre</div>
+                </div>
+              </div>
+
+              <div>
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Confirmer le mot de passe *</label>
+                <input 
+                  type="password" 
+                  id="confirmPassword" 
+                  formControlName="confirmPassword"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <div *ngIf="passwordForm.get('confirmPassword')?.errors?.['passwordMismatch'] && passwordForm.get('confirmPassword')?.touched" class="text-red-500 text-sm mt-1">
+                  Les mots de passe ne correspondent pas
+                </div>
+              </div>
+
+              <div class="flex gap-3 pt-4">
+                <button type="button" (click)="isChangingPassword = false; passwordForm.reset()" class="btn btn-secondary flex-1">
+                  Annuler
+                </button>
+                <button type="submit" class="btn btn-primary flex-1" [disabled]="passwordForm.invalid || isSaving">
+                  <span *ngIf="isSaving" class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+                  {{ isSaving ? 'En cours...' : 'Modifier' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Account Info -->
+          <div class="form-section">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Informations du compte</h3>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-600">ID Utilisateur:</span>
+                <span class="font-semibold text-gray-800">{{ profile.id }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Membre depuis:</span>
+                <span class="font-semibold text-gray-800">{{ profile.dateInscription | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Dernière mise à jour:</span>
+                <span class="font-semibold text-gray-800">{{ profile.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

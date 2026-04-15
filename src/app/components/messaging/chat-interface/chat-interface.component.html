@@ -1,0 +1,410 @@
+<!-- Chat Interface Container -->
+<div class="h-full flex flex-col bg-white" *ngIf="conversation">
+  <!-- Chat Header -->
+  <div class="flex-shrink-0 px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+    <div class="flex items-center justify-between">
+      <!-- Back Button and Title -->
+      <div class="flex items-center space-x-3">
+        <button
+          (click)="backToList.emit()"
+          class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-white transition-colors lg:hidden">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+
+        <!-- Conversation Info -->
+        <div class="flex items-center space-x-3">
+          <!-- Avatar Group -->
+          <div class="relative flex-shrink-0">
+            <div class="flex -space-x-2">
+              <img
+                *ngFor="let participant of conversation.participants.slice(0, 2); let i = index"
+                [src]="'https://ui-avatars.com/api/?name=' + participant.prenom + '+' + participant.nom + '&background=3B82F6&color=fff&size=40'"
+                [alt]="participant.prenom + ' ' + participant.nom"
+                class="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                [class.z-10]="i === 0">
+            </div>
+            
+            <!-- Online indicator -->
+            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full online-indicator"></div>
+          </div>
+
+          <!-- Title and Status -->
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900">{{ getConversationTitle() }}</h2>
+            <div class="flex items-center space-x-2 text-sm text-gray-500">
+              <span>{{ getParticipantCount() }} participants</span>
+              <span *ngIf="getTypingText()" class="text-blue-600 italic">
+                {{ getTypingText() }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2">
+        <!-- Video Call -->
+        <button class="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-white transition-colors">
+          <i class="fas fa-video"></i>
+        </button>
+
+        <!-- Audio Call -->
+        <button class="p-2 text-gray-400 hover:text-green-600 rounded-full hover:bg-white transition-colors">
+          <i class="fas fa-phone"></i>
+        </button>
+
+        <!-- Info -->
+        <button class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-white transition-colors">
+          <i class="fas fa-info-circle"></i>
+        </button>
+
+        <!-- Menu -->
+        <button class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-white transition-colors">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages Container -->
+  <div 
+    #messagesContainer
+    class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 custom-scroll"
+    (dragover)="onDragOver($event)"
+    (drop)="onDrop($event)">
+    
+    <!-- Load More Button -->
+    <div *ngIf="hasMoreMessages" class="text-center">
+      <button
+        *ngIf="!loadingMore"
+        (click)="loadMoreMessages()"
+        class="text-blue-600 hover:text-blue-800 text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+        Charger plus de messages
+      </button>
+      
+      <div *ngIf="loadingMore" class="flex items-center justify-center space-x-2 text-gray-500">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        <span class="text-sm">Chargement...</span>
+      </div>
+    </div>
+
+    <!-- Messages List -->
+    <div *ngFor="let messageGroup of getMessageGroups(); trackBy: trackMessageGroup" class="space-y-1">
+      <!-- Message Group Header (sender and timestamp for first message) -->
+      <div class="flex items-center space-x-2 mb-2" *ngIf="messageGroup.length > 0">
+        <img
+          [src]="'https://ui-avatars.com/api/?name=' + messageGroup[0].sender.name + '&background=3B82F6&color=fff&size=32'"
+          [alt]="messageGroup[0].sender.name"
+          class="w-8 h-8 rounded-full">
+        
+        <div class="flex items-center space-x-2">
+          <span class="text-sm font-medium text-gray-900">{{ messageGroup[0].sender.name }}</span>
+          <span class="text-xs text-gray-500">{{ formatTime(messageGroup[0].timestamp) }}</span>
+        </div>
+      </div>
+
+      <!-- Individual Messages in Group -->
+      <div
+        *ngFor="let message of messageGroup; trackBy: trackMessage"
+        [id]="'message-' + message.id"
+        class="group"
+        [class.flex-row-reverse]="isMessageFromCurrentUser(message)">
+        
+        <div class="flex items-end space-x-2" [class.flex-row-reverse]="isMessageFromCurrentUser(message)">
+          <!-- Message Bubble -->
+          <div
+            class="max-w-md lg:max-w-lg px-4 py-2 rounded-2xl shadow-sm relative message-bubble"
+            [class.bg-blue-600]="isMessageFromCurrentUser(message)"
+            [class.text-white]="isMessageFromCurrentUser(message)"
+            [class.bg-white]="!isMessageFromCurrentUser(message)"
+            [class.text-gray-900]="!isMessageFromCurrentUser(message)"
+            [class.rounded-br-md]="isMessageFromCurrentUser(message)"
+            [class.rounded-bl-md]="!isMessageFromCurrentUser(message)">
+            
+            <!-- Reply Reference -->
+            <div
+              *ngIf="message.replyTo"
+              class="mb-2 p-2 rounded-lg bg-black bg-opacity-10 border-l-2"
+              [class.border-white]="isMessageFromCurrentUser(message)"
+              [class.border-blue-600]="!isMessageFromCurrentUser(message)">
+              
+              <div class="text-xs opacity-75 mb-1">
+                Réponse à {{ message.replyTo.senderName }}
+              </div>
+              <div class="text-sm opacity-90 truncate">
+                {{ message.replyTo.content }}
+              </div>
+            </div>
+
+            <!-- Message Content -->
+            <div class="space-y-2">
+              <!-- Text Content -->
+              <div *ngIf="message.type === 'TEXTE'" class="text-sm leading-relaxed">
+                {{ message.content }}
+              </div>
+
+              <!-- File Attachment -->
+              <div *ngIf="message.attachment" class="space-y-2">
+                <!-- Image -->
+                <div *ngIf="message.attachment.type === 'image'" class="max-w-xs">
+                  <img
+                    [src]="message.attachment.url"
+                    [alt]="message.attachment.name"
+                    class="rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    (click)="openImageModal(message.attachment.url!)">
+                </div>
+
+                <!-- File -->
+                <div
+                  *ngIf="message.attachment.type !== 'image'"
+                  class="flex items-center space-x-3 p-3 rounded-lg"
+                  [class.bg-white]="isMessageFromCurrentUser(message)"
+                  [class.bg-gray-100]="!isMessageFromCurrentUser(message)">
+                  
+                  <div class="flex-shrink-0">
+                    <i [class]="getTypeIcon(message.type)" class="text-lg"></i>
+                  </div>
+                  
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium truncate">{{ message.attachment.name }}</p>
+                    <p class="text-xs opacity-75">{{ message.attachment.size | number }} bytes</p>
+                  </div>
+                  
+                  <button class="flex-shrink-0 p-1 rounded hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-download text-sm"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Message Status -->
+            <div
+              *ngIf="isMessageFromCurrentUser(message)"
+              class="flex items-center justify-end mt-1 space-x-1">
+              
+              <span class="text-xs opacity-75">
+                {{ formatTime(message.timestamp) }}
+              </span>
+              
+              <i
+                *ngIf="message.isRead"
+                class="fas fa-check-double text-xs opacity-75">
+              </i>
+              <i
+                *ngIf="!message.isRead"
+                class="fas fa-check text-xs opacity-75">
+              </i>
+            </div>
+          </div>
+
+          <!-- Message Actions Menu -->
+          <div
+            class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1"
+            [class.flex-row-reverse]="isMessageFromCurrentUser(message)">
+            
+            <!-- Reply -->
+            <button
+              (click)="setReplyToMessage(message)"
+              class="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-white transition-colors">
+              <i class="fas fa-reply text-sm"></i>
+            </button>
+
+            <!-- React -->
+            <button
+              class="p-1 text-gray-400 hover:text-yellow-600 rounded hover:bg-white transition-colors">
+              <i class="fas fa-smile text-sm"></i>
+            </button>
+
+            <!-- More Actions (for own messages) -->
+            <div *ngIf="canModifyMessage(message)" class="relative">
+              <button class="p-1 text-gray-400 hover:text-gray-600 rounded hover:bg-white transition-colors">
+                <i class="fas fa-ellipsis-h text-sm"></i>
+              </button>
+              
+              <!-- Actions Menu -->
+              <div class="absolute bottom-8 right-0 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 hidden">
+                <button
+                  (click)="editMessage(message)"
+                  class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <i class="fas fa-edit mr-2"></i>
+                  Modifier
+                </button>
+                
+                <button
+                  (click)="deleteMessage(message)"
+                  class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                  <i class="fas fa-trash mr-2"></i>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Typing Indicators -->
+    <div *ngIf="typingIndicators.length > 0" class="flex items-center space-x-2">
+      <div class="flex -space-x-1">
+        <img
+          *ngFor="let indicator of typingIndicators.slice(0, 3)"
+          [src]="'https://ui-avatars.com/api/?name=' + indicator.userName + '&background=3B82F6&color=fff&size=24'"
+          [alt]="indicator.userName"
+          class="w-6 h-6 rounded-full border border-white">
+      </div>
+      
+      <div class="flex items-center space-x-1 bg-white px-3 py-2 rounded-full shadow-sm">
+        <div class="flex space-x-1">
+          <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+          <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+          <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reply Bar -->
+  <div
+    *ngIf="replyToMessage"
+    class="flex-shrink-0 px-4 py-2 bg-blue-50 border-t border-blue-200">
+    
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-1 h-8 bg-blue-600 rounded-full"></div>
+        <div>
+          <p class="text-sm font-medium text-blue-900">
+            Réponse à {{ replyToMessage.sender.name }}
+          </p>
+          <p class="text-sm text-blue-700 truncate max-w-md">
+            {{ replyToMessage.content }}
+          </p>
+        </div>
+      </div>
+      
+      <button
+        (click)="clearReply()"
+        class="p-1 text-blue-600 hover:text-blue-800 rounded">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- File Upload Progress -->
+  <div *ngIf="uploadingFiles.length > 0" class="flex-shrink-0 px-4 py-2 bg-yellow-50 border-t border-yellow-200">
+    <div class="space-y-2">
+      <div *ngFor="let file of uploadingFiles" class="flex items-center space-x-3">
+        <i class="fas fa-file text-yellow-600"></i>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-yellow-900">{{ file.name }}</p>
+          <div class="w-full bg-yellow-200 rounded-full h-2">
+            <div
+              class="bg-yellow-600 h-2 rounded-full transition-all duration-300"
+              [style.width.%]="uploadProgress.get(file.name + getCurrentTimestamp()) || 0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Input -->
+  <div class="flex-shrink-0 p-4 border-t border-gray-200 bg-white">
+    <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="space-y-3">
+      <!-- Main Input Area -->
+      <div class="flex items-end space-x-3">
+        <!-- Attachment Button -->
+        <div class="relative">
+          <button
+            type="button"
+            class="p-3 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors">
+            <i class="fas fa-paperclip"></i>
+          </button>
+          
+          <!-- File Input -->
+          <input
+            type="file"
+            multiple
+            (change)="onFileSelected($event)"
+            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            accept="image/*,application/pdf,.doc,.docx,.txt">
+        </div>
+
+        <!-- Message Input -->
+        <div class="flex-1 relative">
+          <textarea
+            #messageInput
+            formControlName="content"
+            placeholder="Tapez votre message..."
+            rows="1"
+            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none max-h-32 text-sm leading-relaxed"
+            style="field-sizing: content;"
+            (keydown.enter)="onEnterKeydown($event)"></textarea>
+          
+          <!-- Emoji Button -->
+          <button
+            type="button"
+            class="absolute right-3 bottom-3 p-1 text-gray-400 hover:text-yellow-500 rounded transition-colors">
+            <i class="fas fa-smile"></i>
+          </button>
+        </div>
+
+        <!-- Send Button -->
+        <button
+          type="submit"
+          [disabled]="!messageForm.valid || loading"
+          class="p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-full transition-colors">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+
+      <!-- Quick Replies -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          *ngFor="let reply of ['👍', '👌', 'Merci !', 'D\'accord', 'Parfait']"
+          type="button"
+          (click)="sendQuickReply(reply)"
+          class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors">
+          {{ reply }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Connection Status -->
+  <div
+    *ngIf="!(messagingService.connectionStatus$ | async)"
+    class="flex-shrink-0 px-4 py-2 bg-red-50 border-t border-red-200 flex items-center justify-center">
+    <div class="flex items-center text-red-800">
+      <i class="fas fa-exclamation-triangle mr-2"></i>
+      <span class="text-sm">Connexion perdue - Tentative de reconnexion...</span>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!conversation" class="h-full flex items-center justify-center bg-gray-50">
+  <div class="text-center">
+    <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+    <h3 class="text-xl font-medium text-gray-900 mb-2">Sélectionnez une conversation</h3>
+    <p class="text-gray-500">Choisissez une conversation dans la liste pour commencer à discuter</p>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+  <div class="flex items-center space-x-3">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="text-gray-600">Chargement des messages...</span>
+  </div>
+</div>
+
+<!-- Error Toast -->
+<div
+  *ngIf="error"
+  class="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2">
+  <i class="fas fa-exclamation-circle"></i>
+  <span>{{ error }}</span>
+  <button (click)="error = null" class="ml-2 hover:bg-red-600 rounded p-1">
+    <i class="fas fa-times text-sm"></i>
+  </button>
+</div>

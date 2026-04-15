@@ -1,0 +1,312 @@
+<div class="user-detail-container bg-gray-50 min-h-screen">
+  <!-- Header -->
+  <div class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button
+            mat-icon-button
+            (click)="goBack()"
+            class="text-gray-600 hover:text-gray-800">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900">User Details</h1>
+            <p class="text-sm text-gray-500">View and manage user information</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2" *ngIf="!loading && user">
+          <button
+            mat-stroked-button
+            (click)="refreshData()"
+            class="flex items-center space-x-1">
+            <mat-icon>refresh</mat-icon>
+            <span>Refresh</span>
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="editUser()"
+            class="flex items-center space-x-1">
+            <mat-icon>edit</mat-icon>
+            <span>Edit User</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center items-center py-16">
+    <div class="text-center">
+      <mat-spinner diameter="40" class="mx-auto mb-4"></mat-spinner>
+      <p class="text-gray-500">Loading user details...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="text-center">
+      <mat-icon class="text-red-500 text-6xl mb-4">error_outline</mat-icon>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">User Not Found</h3>
+      <p class="text-gray-500 mb-4">The user you're looking for doesn't exist or has been removed.</p>
+      <button mat-raised-button color="primary" (click)="goBack()">Back to Users</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error && user" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- User Profile Card -->
+      <div class="lg:col-span-1">
+        <mat-card class="shadow-lg">
+          <mat-card-content class="p-6 text-center">
+            <!-- Avatar -->
+            <div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+              {{ getUserInitials() }}
+            </div>
+
+            <!-- Name and Role -->
+            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ getFullName() }}</h2>
+            <div class="flex justify-center mb-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    [ngClass]="getRoleColor()">
+                <mat-icon class="w-4 h-4 mr-1" [style.font-size.px]="16">{{ getRoleIcon() }}</mat-icon>
+                {{ getUserRole() }}
+              </span>
+            </div>
+
+            <!-- Status -->
+            <div class="flex items-center justify-center space-x-2 mb-6">
+              <mat-icon [ngClass]="getStatusColor()" [style.font-size.px]="20">
+                {{ getStatusIcon() }}
+              </mat-icon>
+              <span class="font-medium" [ngClass]="getStatusColor()">
+                {{ getUserStatus() }}
+              </span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                mat-stroked-button
+                (click)="sendEmail()"
+                [disabled]="!user.email"
+                class="flex items-center justify-center space-x-1">
+                <mat-icon>email</mat-icon>
+                <span>Email</span>
+              </button>
+              <button
+                mat-stroked-button
+                (click)="callUser()"
+                [disabled]="!user.telephone"
+                class="flex items-center justify-center space-x-1">
+                <mat-icon>phone</mat-icon>
+                <span>Call</span>
+              </button>
+              <button
+                mat-stroked-button
+                (click)="editUser()"
+                class="flex items-center justify-center space-x-1">
+                <mat-icon>edit</mat-icon>
+                <span>Edit</span>
+              </button>
+              <button
+                mat-stroked-button
+                (click)="toggleUserStatus()"
+                [ngClass]="userManagement?.enabled ? 'text-red-600' : 'text-green-600'"
+                class="flex items-center justify-center space-x-1">
+                <mat-icon>{{ userManagement?.enabled ? 'block' : 'check_circle' }}</mat-icon>
+                <span>{{ userManagement?.enabled ? 'Disable' : 'Enable' }}</span>
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- User Information -->
+      <div class="lg:col-span-2">
+        <mat-tab-group>
+          <!-- Basic Information Tab -->
+          <mat-tab label="Basic Information">
+            <div class="p-6">
+              <mat-card class="shadow-sm">
+                <mat-card-header>
+                  <mat-card-title class="flex items-center space-x-2">
+                    <mat-icon>person</mat-icon>
+                    <span>Personal Information</span>
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="p-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                      <p class="text-gray-900 font-medium">{{ user.prenom || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                      <p class="text-gray-900 font-medium">{{ user.nom || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                      <p class="text-blue-600 font-medium">
+                        <a href="mailto:{{ user.email }}">{{ user.email || 'N/A' }}</a>
+                      </p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                      <p class="text-gray-900 font-medium">{{ user.telephone || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Registration Date</label>
+                      <p class="text-gray-900 font-medium">{{ formatDate(user.dateInscription) }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
+                      <p class="text-gray-900 font-medium">{{ formatDate(user.updatedAt) }}</p>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+
+          <!-- Role-Specific Information Tab -->
+          <mat-tab label="Role Details">
+            <div class="p-6">
+              <!-- Student Information -->
+              <mat-card *ngIf="getUserRole() === UserRole.STUDENT" class="shadow-sm">
+                <mat-card-header class="bg-blue-50">
+                  <mat-card-title class="flex items-center space-x-2">
+                    <mat-icon class="text-blue-600">school</mat-icon>
+                    <span>Student Information</span>
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="p-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Field of Study</label>
+                      <p class="text-gray-900 font-medium">{{ getStudentData()?.filiere || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+                      <p class="text-gray-900 font-medium">{{ getStudentData()?.annee || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Academic Level</label>
+                      <p class="text-gray-900 font-medium">{{ getStudentData()?.niveau || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Tutor Information -->
+              <mat-card *ngIf="getUserRole() === UserRole.TUTOR" class="shadow-sm">
+                <mat-card-header class="bg-green-50">
+                  <mat-card-title class="flex items-center space-x-2">
+                    <mat-icon class="text-green-600">person</mat-icon>
+                    <span>Tutor Information</span>
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="p-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Experience</label>
+                      <p class="text-gray-900 font-medium">{{ getTutorData()?.experience || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Hourly Rate</label>
+                      <p class="text-gray-900 font-medium">
+                        {{ getTutorData()?.tarif ? '€' + getTutorData()?.tarif : 'N/A' }}
+                      </p>
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Diplomas</label>
+                      <p class="text-gray-900 font-medium">{{ getTutorData()?.diplomes || 'N/A' }}</p>
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <p class="text-gray-900">{{ getTutorData()?.description || 'N/A' }}</p>
+                    </div>
+                    <div *ngIf="getTutorData()?.bio" class="md:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                      <p class="text-gray-900">{{ getTutorData()?.bio }}</p>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Admin Information -->
+              <mat-card *ngIf="getUserRole() === UserRole.ADMIN" class="shadow-sm">
+                <mat-card-header class="bg-purple-50">
+                  <mat-card-title class="flex items-center space-x-2">
+                    <mat-icon class="text-purple-600">admin_panel_settings</mat-icon>
+                    <span>Administrator Information</span>
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="p-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Permissions</label>
+                      <p class="text-gray-900 font-medium">{{ getAdminData()?.permissions || 'N/A' }}</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                      <p class="text-gray-900 font-medium">{{ getAdminData()?.departement || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+
+          <!-- Activity Tab -->
+          <mat-tab label="Activity">
+            <div class="p-6">
+              <mat-card class="shadow-sm">
+                <mat-card-header>
+                  <mat-card-title class="flex items-center space-x-2">
+                    <mat-icon>history</mat-icon>
+                    <span>Activity & History</span>
+                  </mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="p-6">
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between py-3 border-b border-gray-200">
+                      <div class="flex items-center space-x-3">
+                        <mat-icon class="text-blue-600">person_add</mat-icon>
+                        <div>
+                          <p class="font-medium text-gray-900">Account Created</p>
+                          <p class="text-sm text-gray-500">User registration completed</p>
+                        </div>
+                      </div>
+                      <span class="text-sm text-gray-600">{{ formatDate(user.dateInscription) }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-3 border-b border-gray-200" *ngIf="user.updatedAt">
+                      <div class="flex items-center space-x-3">
+                        <mat-icon class="text-green-600">edit</mat-icon>
+                        <div>
+                          <p class="font-medium text-gray-900">Profile Updated</p>
+                          <p class="text-sm text-gray-500">Last profile modification</p>
+                        </div>
+                      </div>
+                      <span class="text-sm text-gray-600">{{ formatDate(user.updatedAt) }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-center py-8 text-gray-500" *ngIf="!user.updatedAt">
+                      <div class="text-center">
+                        <mat-icon class="text-gray-400 text-4xl mb-2">history</mat-icon>
+                        <p>No recent activity</p>
+                      </div>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    </div>
+  </div>
+</div>

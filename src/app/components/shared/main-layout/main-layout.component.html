@@ -1,0 +1,24 @@
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar Component -->
+  <app-sidebar 
+    [user]="user" 
+    [isOpen]="isSidebarOpen"
+    (toggleSidebar)="toggleSidebar()"
+    (logout)="logout()">
+  </app-sidebar>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col">
+    <!-- Header Component -->
+    <app-header 
+      [user]="user" 
+      [title]="currentPageTitle"
+      (toggleSidebar)="toggleSidebar()">
+    </app-header>
+
+    <!-- Page Content -->
+    <main class="flex-1 overflow-auto">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

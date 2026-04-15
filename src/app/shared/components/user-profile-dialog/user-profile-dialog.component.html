@@ -1,0 +1,86 @@
+<div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative overflow-y-auto" style="max-height: 90vh;">
+    <h2 class="text-2xl font-bold mb-4">Profil utilisateur</h2>
+    <button (click)="close()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+      <span class="material-icons">close</span>
+    </button>
+    <div *ngIf="userProfile; else loading">
+      <div class="space-y-6">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h4 class="text-lg font-medium text-gray-900 mb-3">Informations générales</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Nom d'utilisateur</label>
+              <p class="text-gray-900 font-mono text-sm bg-gray-100 px-2 py-1 rounded">{{ userProfile.username }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+              <p class="text-gray-900 font-semibold">{{ userProfile.email }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Prénom</label>
+              <p class="text-gray-900">{{ userProfile.firstName }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Nom</label>
+              <p class="text-gray-900">{{ userProfile.lastName }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Agence</label>
+              <p class="text-gray-900">{{ userProfile.agenceLibelle || userProfile.agenceId }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Code Agence</label>
+              <p class="text-gray-900">{{ userProfile.agenceCode }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Réseau</label>
+              <p class="text-gray-900">{{ userProfile.reseauLibelle }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Région</label>
+              <p class="text-gray-900">{{ userProfile.reseauRegion }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h4 class="text-lg font-medium text-gray-900 mb-3">Statut</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center">
+              <label class="block text-sm font-medium text-gray-600 mb-2">Statut</label>
+              <span [class]="'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ' + (userProfile.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')">
+                {{ userProfile.enabled ? 'Actif' : 'Inactif' }}
+              </span>
+            </div>
+            <div class="text-center">
+              <label class="block text-sm font-medium text-gray-600 mb-1">Délégations totales</label>
+              <p class="text-2xl font-bold text-gray-900">{{ userProfile.totalDelegations || 0 }}</p>
+            </div>
+            <div class="text-center">
+              <label class="block text-sm font-medium text-gray-600 mb-1">Créé le</label>
+              <p class="text-gray-900">{{ userProfile.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h4 class="text-lg font-medium text-gray-900 mb-3">Informations système</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Date de création</label>
+              <p class="text-gray-900">{{ userProfile.createdAt ? (userProfile.createdAt | date:'dd/MM/yyyy HH:mm') : 'Non renseignée' }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600 mb-1">Dernière modification</label>
+              <p class="text-gray-900">{{ userProfile.updatedAt ? (userProfile.updatedAt | date:'dd/MM/yyyy HH:mm') : 'Non renseignée' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ng-template #loading>
+      <div class="flex items-center justify-center py-8">
+        <span class="material-icons animate-spin mr-2">autorenew</span> Chargement du profil...
+      </div>
+    </ng-template>
+  </div>
+</div>

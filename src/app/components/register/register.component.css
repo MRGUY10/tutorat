@@ -1,0 +1,364 @@
+/* Custom Tailwind CSS styles for registration component */
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -50px) scale(1.1);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  75% {
+    transform: translate(50px, 50px) scale(1.05);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Custom form focus effects with gradient */
+.form-input {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.form-input:focus {
+  border-color: rgb(99 102 241);
+  --tw-ring-color: rgb(99 102 241);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), 0 10px 25px rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-input:hover {
+  border-color: rgb(147 197 253);
+}
+
+/* Enhanced button effects */
+.btn-primary {
+  background-image: linear-gradient(135deg, rgb(59 130 246), rgb(147 51 234), rgb(219 39 119));
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  background-position: 100% 50%;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4), 0 5px 15px rgba(147, 51, 234, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Card hover effects with 3D transform */
+.user-type-card {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+}
+
+.user-type-card:hover {
+  transform: translateY(-8px) rotateX(2deg);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.user-type-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.user-type-card:hover::after {
+  opacity: 1;
+}
+
+/* Background pattern animation */
+.bg-pattern {
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+}
+
+/* Smooth transitions for all interactive elements */
+*:not(input):not(select):not(textarea) {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Ensure input text is always visible */
+input, select, textarea {
+  color: #1f2937 !important;
+  background-color: white !important;
+}
+
+input::placeholder, select::placeholder, textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Custom scrollbar for form sections */
+.form-section::-webkit-scrollbar {
+  width: 4px;
+}
+
+.form-section::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.form-section::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.form-section::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Loading spinner enhancement */
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Form validation states */
+.form-field.error input,
+.form-field.error select,
+.form-field.error textarea {
+  border-color: rgb(239 68 68);
+}
+
+.form-field.error input:focus,
+.form-field.error select:focus,
+.form-field.error textarea:focus {
+  --tw-ring-color: rgb(239 68 68);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.form-field.success input,
+.form-field.success select,
+.form-field.success textarea {
+  border-color: rgb(34 197 94);
+}
+
+.form-field.success input:focus,
+.form-field.success select:focus,
+.form-field.success textarea:focus {
+  --tw-ring-color: rgb(34 197 94);
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+/* Typography enhancements */
+.font-heading {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+}
+
+/* Responsive design helpers */
+@media (max-width: 640px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .registration-card {
+    margin: 1rem;
+    border-radius: 1rem;
+  }
+}
+
+/* Accessibility improvements */
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Matiere dropdown styles - ensure visibility */
+.matiere-dropdown-container {
+  position: relative;
+  z-index: 50;
+}
+
+.matiere-dropdown-container input {
+  background-color: white !important;
+  color: #1f2937 !important;
+}
+
+.matiere-dropdown-list {
+  background-color: white !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.matiere-dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  background-color: white !important;
+  color: #1f2937 !important;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.matiere-dropdown-item:hover {
+  background-color: #f3e8ff !important;
+  color: #6b21a8 !important;
+}
+
+.matiere-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.matiere-dropdown-item .matiere-name {
+  font-weight: 500;
+  color: #1f2937 !important;
+  font-size: 0.875rem;
+}
+
+.matiere-dropdown-item .matiere-level {
+  font-size: 0.75rem;
+  color: #6b7280 !important;
+}
+
+.matiere-dropdown-item:hover .matiere-name {
+  color: #6b21a8 !important;
+}
+
+/* Selected matiere tags */
+.matiere-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f3e8ff !important;
+  color: #6b21a8 !important;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #d8b4fe;
+}
+
+.matiere-tag button {
+  margin-left: 0.5rem;
+  color: #6b21a8 !important;
+  transition: color 0.2s ease;
+}
+
+.matiere-tag button:hover {
+  color: #581c87 !important;
+}
+
+/* Dark mode support (if needed later) - excluding form inputs */
+@media (prefers-color-scheme: dark) {
+  .bg-white:not(input):not(select):not(textarea):not(.matiere-dropdown-list):not(.matiere-dropdown-item):not(.matiere-tag) {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+  
+  /* Keep inputs and dropdowns visible in dark mode */
+  input, select, textarea, .matiere-dropdown-list, .matiere-dropdown-item {
+    background-color: white !important;
+    color: #1f2937 !important;
+    border-color: #d1d5db !important;
+  }
+  
+  .matiere-dropdown-item:hover {
+    background-color: #f3e8ff !important;
+    color: #6b21a8 !important;
+  }
+}

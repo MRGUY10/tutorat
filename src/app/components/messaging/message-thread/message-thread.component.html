@@ -1,0 +1,352 @@
+<!-- Message Thread Container -->
+<div class="flex flex-col h-full bg-white">
+  
+  <!-- Header -->
+  <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shadow-sm">
+    <!-- Back Button (Mobile) -->
+    <button 
+      (click)="onBack()"
+      class="md:hidden mr-3 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <!-- Conversation Info -->
+    <div class="flex items-center space-x-3 flex-1 min-w-0">
+      <!-- Avatar -->
+      <div class="flex-shrink-0">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+          <i class="fas fa-user text-white"></i>
+        </div>
+      </div>
+
+      <!-- Title and Status -->
+      <div class="flex-1 min-w-0">
+        <h3 class="text-lg font-semibold text-gray-900 truncate">
+          {{ getConversationTitle() }}
+        </h3>
+        <div class="flex items-center space-x-2">
+          <p class="text-sm text-gray-500">
+            {{ getConversationSubtitle() }}
+          </p>
+          <!-- Typing Indicator -->
+          <div *ngIf="typingUsers.length > 0" class="flex items-center space-x-1 text-sm text-blue-600">
+            <div class="flex space-x-1">
+              <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+              <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+            <span class="ml-2">{{ getTypingText() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center space-x-2">
+      <!-- Scroll to Bottom Button -->
+      <button 
+        *ngIf="showScrollToBottom"
+        (click)="onScrollToBottom()"
+        class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+        title="Aller au bas">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+
+      <!-- Info Button -->
+      <button 
+        (click)="onShowInfo()"
+        class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+        title="Informations sur la conversation">
+        <i class="fas fa-info-circle"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="px-4 py-3 bg-red-50 border-b border-red-200">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>
+        <span class="text-sm text-red-700">{{ error }}</span>
+      </div>
+      <button 
+        (click)="clearError()"
+        class="text-red-400 hover:text-red-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages Container -->
+  <div 
+    #messagesContainer
+    class="flex-1 overflow-y-auto px-4 py-4 space-y-1"
+    [class.opacity-50]="loading">
+    
+    <!-- Loading More Messages -->
+    <div *ngIf="loadingMore" class="text-center py-4">
+      <div class="inline-flex items-center px-3 py-2 text-sm text-gray-600">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+        Chargement des messages...
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && messages.length === 0" class="flex items-center justify-center py-12">
+      <div class="text-center">
+        <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun message</h3>
+        <p class="text-sm text-gray-500 mb-4">Envoyez le premier message pour commencer la conversation</p>
+      </div>
+    </div>
+
+    <!-- Message List -->
+    <div *ngIf="messages.length > 0" class="space-y-1">
+      <ng-container *ngFor="let message of messages; let i = index; trackBy: trackMessage">
+        
+        <!-- Date Separator -->
+        <div *ngIf="shouldShowDateSeparator(message, i)" class="flex justify-center my-4">
+          <div class="px-3 py-1 bg-gray-100 rounded-full">
+            <span class="text-xs font-medium text-gray-600">{{ getDateSeparatorText(message.timestamp) }}</span>
+          </div>
+        </div>
+
+        <!-- Message Bubble -->
+        <div class="message-container" [class.message-own]="message.isOwn" [class.message-grouped]="shouldGroupMessage(message, i)">
+          
+          <!-- Sender Avatar (for received messages, not grouped) -->
+          <div 
+            *ngIf="!message.isOwn && !shouldGroupMessage(message, i)" 
+            class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center text-white text-xs font-semibold mr-3 self-end">
+            {{ message.senderInitials }}
+          </div>
+          
+          <!-- Message Content -->
+          <div class="message-bubble" [class.message-bubble-own]="message.isOwn" [class.message-bubble-other]="!message.isOwn">
+            
+            <!-- Reply Context -->
+            <div *ngIf="message.replyTo" class="reply-context mb-2 p-2 bg-gray-100 rounded border-l-4 border-blue-500">
+              <div class="text-xs text-gray-600 mb-1">
+                En réponse à {{ message.replyTo.senderName }}
+              </div>
+              <div class="text-sm text-gray-800 truncate">
+                {{ message.replyTo.content }}
+              </div>
+            </div>
+
+            <!-- Sender Name (for received messages, not grouped) -->
+            <div 
+              *ngIf="!message.isOwn && !shouldGroupMessage(message, i)" 
+              class="text-xs font-semibold text-gray-700 mb-1">
+              {{ message.senderName }}
+            </div>
+
+            <!-- Message Content -->
+            <div class="message-content">
+              <!-- Text Message -->
+              <div *ngIf="message.type === 'TEXTE'" class="whitespace-pre-wrap break-words">
+                {{ message.content }}
+              </div>
+
+              <!-- Image Message -->
+              <div *ngIf="message.type === 'IMAGE' && message.fileUrl" class="image-message">
+                <img 
+                  [src]="message.fileUrl" 
+                  [alt]="'Image partagée par ' + message.senderName"
+                  class="max-w-sm max-h-64 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                  loading="lazy">
+                <div class="text-sm text-gray-600 mt-1">{{ message.content }}</div>
+              </div>
+
+              <!-- File Message -->
+              <div *ngIf="message.type === 'FICHIER' && message.fileUrl" class="file-message">
+                <div class="flex items-center p-3 bg-gray-100 rounded-lg border">
+                  <i [class]="getFileIcon(message.fileUrl)" class="text-2xl text-gray-600 mr-3"></i>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium text-gray-900 truncate">
+                      {{ message.content }}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      Fichier joint
+                    </div>
+                  </div>
+                  <button class="ml-3 text-blue-600 hover:text-blue-700">
+                    <i class="fas fa-download"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Message Metadata -->
+            <div class="message-meta flex items-center justify-between mt-2">
+              <span class="text-xs text-gray-500">
+                {{ formatTime(message.timestamp) }}
+              </span>
+              
+              <!-- Read Status (for own messages) -->
+              <div *ngIf="message.isOwn" class="flex items-center space-x-1">
+                <i 
+                  class="fas fa-check text-xs"
+                  [class.text-gray-400]="!message.isRead"
+                  [class.text-blue-500]="message.isRead"
+                  [title]="message.isRead ? 'Lu' : 'Envoyé'">
+                </i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Actions (shown on hover) -->
+          <div class="message-actions opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="flex items-center space-x-1 ml-2">
+              <button 
+                (click)="onReplyToMessage(message)"
+                class="p-1 text-gray-400 hover:text-blue-600 rounded"
+                title="Répondre">
+                <i class="fas fa-reply text-xs"></i>
+              </button>
+              <button 
+                (click)="onCopyMessage(message)"
+                class="p-1 text-gray-400 hover:text-green-600 rounded"
+                title="Copier">
+                <i class="fas fa-copy text-xs"></i>
+              </button>
+              <button 
+                *ngIf="message.isOwn"
+                (click)="onDeleteMessage(message)"
+                class="p-1 text-gray-400 hover:text-red-600 rounded"
+                title="Supprimer">
+                <i class="fas fa-trash text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Message Composition Area -->
+  <div class="border-t border-gray-200 bg-white">
+    
+    <!-- Reply Context -->
+    <div *ngIf="replyToMessage" class="px-4 py-2 bg-gray-50 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-reply text-blue-600"></i>
+          <div class="text-sm">
+            <span class="font-medium text-gray-700">Répondre à {{ replyToMessage.senderName }}</span>
+            <div class="text-gray-600 truncate max-w-md">{{ replyToMessage.content }}</div>
+          </div>
+        </div>
+        <button 
+          (click)="onCancelReply()"
+          class="p-1 text-gray-400 hover:text-gray-600 rounded">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- File Upload Area -->
+    <div 
+      *ngIf="selectedFiles.length > 0"
+      class="px-4 py-2 bg-blue-50 border-b border-blue-200">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-paperclip text-blue-600"></i>
+        <div class="flex-1">
+          <div *ngFor="let file of selectedFiles; let i = index" class="flex items-center justify-between py-1">
+            <span class="text-sm text-blue-700">{{ file.name }}</span>
+            <button 
+              (click)="removeFile(i)"
+              class="text-blue-400 hover:text-blue-600">
+              <i class="fas fa-times text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drag and Drop Overlay -->
+    <div 
+      *ngIf="dragActive"
+      class="absolute inset-0 bg-blue-600 bg-opacity-90 flex items-center justify-center z-50"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)">
+      <div class="text-center text-white">
+        <i class="fas fa-upload text-4xl mb-4"></i>
+        <p class="text-lg font-medium">Déposez vos fichiers ici</p>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="px-4 py-3">
+      <div class="flex items-end space-x-3">
+        
+        <!-- File Upload Button -->
+        <div class="flex-shrink-0">
+          <input 
+            type="file" 
+            id="file-input" 
+            multiple 
+            class="hidden"
+            (change)="onFileSelect($event)"
+            accept="image/*,.pdf,.doc,.docx,.txt">
+          <label 
+            for="file-input"
+            class="cursor-pointer p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+            <i class="fas fa-paperclip"></i>
+          </label>
+        </div>
+
+        <!-- Message Input -->
+        <div class="flex-1 relative">
+          <textarea
+            #messageInput
+            [(ngModel)]="messageText"
+            (input)="onMessageInput($event)"
+            (keydown)="onKeyDown($event)"
+            placeholder="Tapez votre message..."
+            rows="1"
+            class="w-full px-4 py-2 border border-gray-300 rounded-2xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 max-h-32 overflow-y-auto"
+            [style.height.px]="Math.min(Math.max(40, messageInput?.nativeElement?.scrollHeight || 40), 128)"
+            [dragover]="onDragOver($event)"
+            [dragleave]="onDragLeave($event)"
+            [drop]="onDrop($event)"></textarea>
+          
+          <!-- Character Count -->
+          <div *ngIf="messageText.length > 1800" class="absolute bottom-2 right-2 text-xs text-gray-500">
+            {{ messageText.length }}/2000
+          </div>
+        </div>
+
+        <!-- Send Button -->
+        <div class="flex-shrink-0">
+          <button 
+            (click)="onSendMessage()"
+            [disabled]="!canSendMessage()"
+            class="p-2 rounded-full transition-colors"
+            [class.bg-blue-600]="canSendMessage()"
+            [class.text-white]="canSendMessage()"
+            [class.hover:bg-blue-700]="canSendMessage()"
+            [class.bg-gray-200]="!canSendMessage()"
+            [class.text-gray-400]="!canSendMessage()"
+            [class.cursor-not-allowed]="!canSendMessage()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Input Help Text -->
+      <div class="mt-2 text-xs text-gray-500">
+        Appuyez sur Entrée pour envoyer, Maj+Entrée pour une nouvelle ligne
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll to Bottom Button (Floating) -->
+  <button 
+    *ngIf="showScrollToBottom"
+    (click)="onScrollToBottom()"
+    class="fixed bottom-20 right-6 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors z-10">
+    <i class="fas fa-chevron-down"></i>
+  </button>
+</div>

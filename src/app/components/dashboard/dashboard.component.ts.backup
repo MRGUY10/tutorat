@@ -1,0 +1,1456 @@
+import { Component, OnInit } from '@angular/core';
+import { Router, RouterLink, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+interface DashboardStats {
+  totalSessions: number;
+  completedSessions: number;
+  upcomingSessions: number;
+  averageRating: number;
+  totalReviews: number;
+  totalEarnings?: number; // For tutors
+  totalHours?: number; // For tutors
+  enrolledCourses?: number; // For students
+  favoriteSubjects?: string[]; // For students
+}
+
+interface RecentActivity {
+  id: number;
+  type: 'session' | 'review' | 'payment' | 'message';
+  title: string;
+  description: string;
+  timestamp: Date;
+  status?: string;
+  avatar?: string;
+}
+
+interface QuickAction {
+  icon: string;
+  title: string;
+  description: string;
+  route: string;
+  color: string;
+}
+
+@Component({
+  selector: 'app-dashboard',
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css'],
+  standalone: true,
+  imports: [NgIf, NgFor, NgClass, DatePipe, FormsModule, RouterLink, RouterModule]
+})
+export class DashboardComponent implements OnInit {
+  user: any = null;
+  stats: DashboardStats = {
+    totalSessions: 0,
+    completedSessions: 0,
+    upcomingSessions: 0,
+    averageRating: 0,
+    totalReviews: 0
+  };
+  
+  recentActivities: RecentActivity[] = [];
+  quickActions: QuickAction[] = [];
+  isSidebarOpen = true;
+  currentTime = new Date();
+  
+  // Navigation menu items based on user role
+  navigationItems: any[] = [];
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    this.loadUserProfile();
+    this.loadDashboardData();
+    this.setupQuickActions();
+    this.setupNavigation();
+    
+    // Update time every minute
+    setInterval(() => {
+      this.currentTime = new Date();
+    }, 60000);
+  }
+
+  loadUserProfile() {
+    this.user = this.authService.getUserProfile();
+    if (!this.user) {
+      this.router.navigate(['/login']);
+      return;
+    }
+  }
+
+  loadDashboardData() {
+    // Mock data - replace with actual service calls
+    this.stats = {
+      totalSessions: 24,
+      completedSessions: 18,
+      upcomingSessions: 6,
+      averageRating: 4.8,
+      totalReviews: 45,
+      totalEarnings: this.user?.role === 'TUTOR' ? 2850 : undefined,
+      totalHours: this.user?.role === 'TUTOR' ? 120 : undefined,
+      enrolledCourses: this.user?.role === 'STUDENT' ? 5 : undefined,
+      favoriteSubjects: this.user?.role === 'STUDENT' ? ['Mathematics', 'Physics', 'Computer Science'] : undefined
+    };
+
+    this.recentActivities = [
+      {
+        id: 1,
+        type: 'session',
+        title: 'Mathematics Session Completed',
+        description: 'Session with John Doe completed successfully',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        status: 'completed'
+      },
+      {
+        id: 2,
+        type: 'review',
+        title: 'New 5-Star Review',
+        description: 'Excellent explanation of calculus concepts',
+        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
+        status: 'new'
+      },
+      {
+        id: 3,
+        type: 'message',
+        title: 'New Message',
+        description: 'Sarah Johnson sent you a message',
+        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
+        status: 'unread'
+      },
+      {
+        id: 4,
+        type: 'payment',
+        title: 'Payment Received',
+        description: '$85 for Physics tutoring session',
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        status: 'received'
+      }
+    ];
+  }
+
+  setupQuickActions() {
+    if (this.user?.role === 'TUTOR') {
+      this.quickActions = [
+        {
+          icon: 'calendar-plus',
+          title: 'Schedule Session',
+          description: 'Set up a new tutoring session',
+          route: '/sessions/create',
+          color: 'blue'
+        },
+        {
+          icon: 'users',
+          title: 'Manage Students',
+          description: 'View and manage your students',
+          route: '/students',
+          color: 'green'
+        },
+        {
+          icon: 'star',
+          title: 'View Reviews',
+          description: 'Check your ratings and reviews',
+          route: '/reviews',
+          color: 'yellow'
+        },
+        {
+          icon: 'dollar-sign',
+          title: 'Earnings',
+          description: 'View your earnings and payments',
+          route: '/earnings',
+          color: 'purple'
+        }
+      ];
+    } else if (this.user?.role === 'STUDENT') {
+      this.quickActions = [
+        {
+          icon: 'search',
+          title: 'Find Tutor',
+          description: 'Search for expert tutors',
+          route: '/tutors/search',
+          color: 'blue'
+        },
+        {
+          icon: 'calendar',
+          title: 'My Sessions',
+          description: 'View upcoming sessions',
+          route: '/sessions',
+          color: 'green'
+        },
+        {
+          icon: 'book-open',
+          title: 'Study Materials',
+          description: 'Access learning resources',
+          route: '/materials',
+          color: 'indigo'
+        },
+        {
+          icon: 'message-circle',
+          title: 'Messages',
+          description: 'Chat with your tutors',
+          route: '/messages',
+          color: 'pink'
+        }
+      ];
+    } else if (this.user?.role === 'ADMIN') {
+      this.quickActions = [
+        {
+          icon: 'users',
+          title: 'User Management',
+          description: 'Manage platform users',
+          route: '/admin/users',
+          color: 'red'
+        },
+        {
+          icon: 'bar-chart',
+          title: 'Analytics',
+          description: 'View platform statistics',
+          route: '/admin/analytics',
+          color: 'blue'
+        },
+        {
+          icon: 'settings',
+          title: 'System Settings',
+          description: 'Configure platform settings',
+          route: '/admin/settings',
+          color: 'gray'
+        },
+        {
+          icon: 'shield',
+          title: 'Security',
+          description: 'Security and audit logs',
+          route: '/admin/security',
+          color: 'green'
+        }
+      ];
+    }
+  }
+
+  setupNavigation() {
+    const commonItems = [
+      {
+        icon: 'home',
+        label: 'Dashboard',
+        route: '/dashboard',
+        active: true
+      }
+    ];
+
+    const studentItems = [
+      ...commonItems,
+      {
+        icon: 'search',
+        label: 'Find Tutors',
+        route: '/tutors',
+        submenu: [
+          { label: 'Browse All', route: '/tutors' },
+          { label: 'By Subject', route: '/tutors/subjects' },
+          { label: 'Top Rated', route: '/tutors/top-rated' },
+          { label: 'Favorites', route: '/tutors/favorites' }
+        ]
+      },
+      {
+        icon: 'calendar',
+        label: 'Sessions',
+        route: '/sessions',
+        submenu: [
+          { label: 'Upcoming', route: '/sessions/upcoming' },
+          { label: 'History', route: '/sessions/history' },
+          { label: 'Request Session', route: '/sessions/request' }
+        ]
+      },
+      {
+        icon: 'message-circle',
+        label: 'Messages',
+        route: '/messages'
+      },
+      {
+        icon: 'star',
+        label: 'Reviews',
+        route: '/reviews',
+        submenu: [
+          { label: 'Write Review', route: '/reviews/write' },
+          { label: 'My Reviews', route: '/reviews/my-reviews' }
+        ]
+      },
+      {
+        icon: 'credit-card',
+        label: 'Payments',
+        route: '/payments',
+        submenu: [
+          { label: 'Payment History', route: '/payments/history' },
+          { label: 'Payment Methods', route: '/payments/methods' }
+        ]
+      },
+      {
+        icon: 'book-open',
+        label: 'Resources',
+        route: '/resources'
+      }
+    ];
+
+    const tutorItems = [
+      ...commonItems,
+      {
+        icon: 'users',
+        label: 'Students',
+        route: '/students',
+        submenu: [
+          { label: 'Active Students', route: '/students/active' },
+          { label: 'Student Requests', route: '/students/requests' },
+          { label: 'Student Progress', route: '/students/progress' }
+        ]
+      },
+      {
+        icon: 'calendar',
+        label: 'Sessions',
+        route: '/sessions',
+        submenu: [
+          { label: 'Schedule Session', route: '/sessions/create' },
+          { label: 'Upcoming', route: '/sessions/upcoming' },
+          { label: 'Session History', route: '/sessions/history' },
+          { label: 'Availability', route: '/sessions/availability' }
+        ]
+      },
+      {
+        icon: 'brain',
+        label: 'Competences',
+        route: '/competences',
+        submenu: [
+          { label: 'My Expertise', route: '/competences/my-competences' },
+          { label: 'Add Competence', route: '/competences/add' },
+          { label: 'Certifications', route: '/competences/certifications' }
+        ]
+      },
+      {
+        icon: 'message-circle',
+        label: 'Messages',
+        route: '/messages'
+      },
+      {
+        icon: 'star',
+        label: 'Reviews & Ratings',
+        route: '/reviews',
+        submenu: [
+          { label: 'My Reviews', route: '/reviews/received' },
+          { label: 'Rating Analytics', route: '/reviews/analytics' }
+        ]
+      },
+      {
+        icon: 'clipboard-check',
+        label: 'Evaluations',
+        route: '/evaluations',
+        submenu: [
+          { label: 'Create Evaluation', route: '/evaluations/create' },
+          { label: 'Evaluation History', route: '/evaluations/history' }
+        ]
+      },
+      {
+        icon: 'dollar-sign',
+        label: 'Earnings',
+        route: '/earnings',
+        submenu: [
+          { label: 'Financial Overview', route: '/earnings/overview' },
+          { label: 'Payment History', route: '/earnings/history' },
+          { label: 'Tax Documents', route: '/earnings/tax' }
+        ]
+      },
+      {
+        icon: 'book-open',
+        label: 'Resources',
+        route: '/resources'
+      }
+    ];
+
+    const adminItems = [
+      ...commonItems,
+      {
+        icon: 'users',
+        label: 'User Management',
+        route: '/admin/users',
+        submenu: [
+          { label: 'All Users', route: '/admin/users' },
+          { label: 'Students', route: '/admin/users/students' },
+          { label: 'Tutors', route: '/admin/users/tutors' },
+          { label: 'Admins', route: '/admin/users/admins' },
+          { label: 'Pending Approvals', route: '/admin/users/pending' }
+        ]
+      },
+      {
+        icon: 'calendar',
+        label: 'Session Management',
+        route: '/admin/sessions',
+        submenu: [
+          { label: 'All Sessions', route: '/admin/sessions' },
+          { label: 'Session Analytics', route: '/admin/sessions/analytics' },
+          { label: 'Disputes', route: '/admin/sessions/disputes' }
+        ]
+      },
+      {
+        icon: 'book',
+        label: 'Subject Management',
+        route: '/admin/subjects',
+        submenu: [
+          { label: 'All Subjects', route: '/admin/subjects' },
+          { label: 'Add Subject', route: '/admin/subjects/create' },
+          { label: 'Competence Levels', route: '/admin/subjects/competences' }
+        ]
+      },
+      {
+        icon: 'star',
+        label: 'Reviews & Quality',
+        route: '/admin/reviews',
+        submenu: [
+          { label: 'Review Moderation', route: '/admin/reviews/moderation' },
+          { label: 'Quality Metrics', route: '/admin/reviews/metrics' },
+          { label: 'Reported Reviews', route: '/admin/reviews/reported' }
+        ]
+      },
+      {
+        icon: 'credit-card',
+        label: 'Financial Management',
+        route: '/admin/finance',
+        submenu: [
+          { label: 'Transaction Overview', route: '/admin/finance/transactions' },
+          { label: 'Payment Analytics', route: '/admin/finance/analytics' },
+          { label: 'Commission Settings', route: '/admin/finance/commission' }
+        ]
+      },
+      {
+        icon: 'bar-chart',
+        label: 'Analytics & Reports',
+        route: '/admin/analytics',
+        submenu: [
+          { label: 'Platform Overview', route: '/admin/analytics/overview' },
+          { label: 'User Analytics', route: '/admin/analytics/users' },
+          { label: 'Revenue Reports', route: '/admin/analytics/revenue' },
+          { label: 'Performance Metrics', route: '/admin/analytics/performance' }
+        ]
+      },
+      {
+        icon: 'settings',
+        label: 'System Settings',
+        route: '/admin/settings',
+        submenu: [
+          { label: 'General Settings', route: '/admin/settings/general' },
+          { label: 'Email Templates', route: '/admin/settings/email' },
+          { label: 'Platform Configuration', route: '/admin/settings/platform' }
+        ]
+      },
+      {
+        icon: 'shield',
+        label: 'Security & Logs',
+        route: '/admin/security',
+        submenu: [
+          { label: 'Security Dashboard', route: '/admin/security/dashboard' },
+          { label: 'Audit Logs', route: '/admin/security/logs' },
+          { label: 'Access Control', route: '/admin/security/access' }
+        ]
+      }
+    ];
+
+    switch (this.user?.role) {
+      case 'STUDENT':
+        this.navigationItems = studentItems;
+        break;
+      case 'TUTOR':
+        this.navigationItems = tutorItems;
+        break;
+      case 'ADMIN':
+        this.navigationItems = adminItems;
+        break;
+      default:
+        this.navigationItems = commonItems;
+    }
+  }
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  getActivityIcon(type: string): string {
+    switch (type) {
+      case 'session': return 'calendar';
+      case 'review': return 'star';
+      case 'payment': return 'dollar-sign';
+      case 'message': return 'message-circle';
+      default: return 'bell';
+    }
+  }
+
+  getActivityColor(type: string): string {
+    switch (type) {
+      case 'session': return 'text-blue-600';
+      case 'review': return 'text-yellow-600';
+      case 'payment': return 'text-green-600';
+      case 'message': return 'text-purple-600';
+      default: return 'text-gray-600';
+    }
+  }
+
+  navigateTo(route: string) {
+    this.router.navigate([route]);
+  }
+}
+    FormsModule,
+  ],
+  styleUrls: ['./dashboard.component.scss'],
+  providers: [DatePipe]
+})
+export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('processChart', { static: false }) processChart!: ElementRef<HTMLCanvasElement>;
+
+  private socket$!: WebSocketSubject<ProcessStatusData>;
+  private workflowSocket$!: WebSocketSubject<WorkflowStatsData[]>;
+
+  processData: ProcessStatusData | null = null;
+  workflowStats: WorkflowStatsData[] = [];
+  loading = true;
+  lastUpdated: Date | null = null;
+  private chart: Chart | null = null;
+
+  selectedTimePeriod: 'year' | 'month' | 'week' | 'day' = 'month';
+  selectedYear: number = new Date().getFullYear();
+  selectedMonth: number = new Date().getMonth() + 1; // 1-12
+  selectedWeek: number = 1;
+
+  availableYears: number[] = [];
+  availableMonths = [
+    { value: 1, label: 'Janvier' },
+    { value: 2, label: 'Février' },
+    { value: 3, label: 'Mars' },
+    { value: 4, label: 'Avril' },
+    { value: 5, label: 'Mai' },
+    { value: 6, label: 'Juin' },
+    { value: 7, label: 'Juillet' },
+    { value: 8, label: 'Août' },
+    { value: 9, label: 'Septembre' },
+    { value: 10, label: 'Octobre' },
+    { value: 11, label: 'Novembre' },
+    { value: 12, label: 'Décembre' }
+  ];
+
+  // Table filtering properties
+  tableStartDate: string = new Date().toISOString().split('T')[0]; // Today's date
+  tableEndDate: string = new Date().toISOString().split('T')[0]; // Today's date
+  filteredWorkflowStats: WorkflowStatsData[] = [];
+
+  // Pagination properties for the workflow stats table
+  tableCurrentPage: number = 1;
+  tablePageSize: number = 5;
+  tableTotalPages: number = 1;
+  tableVisiblePageNumbers: number[] = [];
+  tablePaginatedData: WorkflowStatsData[] = [];
+
+  // Math utility for template use
+  Math = Math;
+
+  // Process definition filtering
+  selectedProcessDefinition: string = 'all';
+  availableProcessDefinitions: { value: string; label: string }[] = [];
+
+  // Sync state between table and chart
+  isChartSyncedWithTable: boolean = false;
+
+  // Dashboard stats properties
+  delegationStats: any = null;
+  agencyStats: any = null;
+  networkStats: any = null;
+  powerStats: any = null;
+
+  // Add current date for validation
+  currentDate: string = new Date().toISOString().split('T')[0];
+
+  // Statistics for summary cards
+  // delegationStats, powerStats, networkStats, agencyStats removed
+  backendHealth: any = null; // Placeholder for backend/system health
+  backendInfo: any = null;   // Placeholder for backend/system info
+
+  constructor(
+  // Removed unused services from constructor
+  ) {
+    Chart.register(...registerables);
+    this.initializeAvailableYears();
+  }
+
+  ngOnInit(): void {
+    // this.connectWebSocket();
+    // this.connectWorkflowStatsWebSocket();
+    this.filterTableData(); // Initialize table filtering
+    this.fetchStatistics();
+  }
+
+  private fetchStatistics(): void {
+    // Statistics fetch for removed services skipped
+    // TODO: Implement backendHealth and backendInfo fetch when endpoint/service is available
+    // this.backendHealth = ...
+    // this.backendInfo = ...
+  }
+
+  ngAfterViewInit(): void {
+    this.createProcessChart();
+  }
+
+  ngOnDestroy(): void {
+    this.socket$.complete();
+    this.workflowSocket$.complete();
+    if (this.chart) {
+      this.chart.destroy();
+    }
+  }
+
+  // private connectWebSocket(): void {
+  //   const wsUrl = `${environment.BASE_URL}/process-status`;
+  //   this.socket$ = new WebSocketSubject(wsUrl);
+  //
+  //   this.socket$.subscribe({
+  //     next: (data) => {
+  //       this.processData = data;
+  //       this.lastUpdated = new Date(data.timestamp);
+  //       this.loading = false;
+  //     },
+  //     error: (err) => {
+  //       console.error('WebSocket error:', err);
+  //       this.loading = false;
+  //       // Implement reconnect logic here if needed
+  //     },
+  //     complete: () => console.log('WebSocket connection closed')
+  //   });
+  // }
+  //
+  // private connectWorkflowStatsWebSocket(): void {
+  //   const wsUrl = `${environment.websocket2Url}/workflow-stats`;
+  //   this.workflowSocket$ = new WebSocketSubject(wsUrl);
+  //
+  //   this.workflowSocket$.subscribe({
+  //     next: (data) => {
+  //       this.workflowStats = data;
+  //       this.updateAvailableProcessDefinitions();
+  //       this.filterTableData();
+  //       this.updateProcessChart();
+  //       console.log('Workflow stats received:', data);
+  //     },
+  //     error: (err) => {
+  //       console.error('Workflow stats WebSocket error:', err);
+  //     },
+  //     complete: () => console.log('Workflow stats WebSocket connection closed')
+  //   });
+  // }
+
+  private createProcessChart(): void {
+    if (!this.processChart) return;
+
+    const ctx = this.processChart.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    this.chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Processus avec échecs',
+            data: [],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#ef4444',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          },
+          {
+            label: 'Total processus',
+            data: [],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              padding: 20,
+              font: {
+                size: 12,
+                weight: 'bold'
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleColor: '#ffffff',
+            bodyColor: '#ffffff',
+            borderColor: '#374151',
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true,
+            callbacks: {
+              title: (context) => `Date: ${context[0].label}`,
+              label: (context) => `${context.dataset.label}: ${context.raw}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(156, 163, 175, 0.2)'
+            },
+            ticks: {
+              color: '#6b7280',
+              font: {
+                size: 11
+              }
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(156, 163, 175, 0.2)'
+            },
+            ticks: {
+              color: '#6b7280',
+              font: {
+                size: 11
+              },
+              maxRotation: 45
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        elements: {
+          point: {
+            hoverBackgroundColor: '#ffffff'
+          }
+        }
+      }
+    });
+  }
+
+  private initializeAvailableYears(): void {
+    const currentYear = new Date().getFullYear();
+    // Only include current year and past years (no future years)
+    this.availableYears = Array.from({ length: 3 }, (_, i) => currentYear - i);
+  }
+
+  private updateAvailableProcessDefinitions(): void {
+    // Extract unique process definition names
+    const uniqueDefinitions = [...new Set(this.workflowStats.map(stat => stat.procDefName))];
+
+    this.availableProcessDefinitions = [
+      { value: 'all', label: 'Tous les processus' },
+      ...uniqueDefinitions.map(name => ({ value: name, label: name }))
+    ];
+  }
+
+  private getFilteredWorkflowStatsForChart(): WorkflowStatsData[] {
+    let filtered = this.workflowStats;
+
+    // Filter by process definition
+    if (this.selectedProcessDefinition !== 'all') {
+      filtered = filtered.filter(stat => stat.procDefName === this.selectedProcessDefinition);
+    }
+
+    // Apply table date filter when synced - this overrides time period filters
+    if (this.isChartSyncedWithTable) {
+      const startDate = new Date(this.tableStartDate);
+      const endDate = new Date(this.tableEndDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      filtered = filtered.filter(stat => {
+        const statDate = new Date(stat.procInstDate);
+        return statDate >= startDate && statDate <= endDate;
+      });
+
+      // Return early when synced to avoid time period filtering
+      return filtered;
+    }
+
+    return filtered;
+  }
+
+  private updateProcessChart(): void {
+    if (!this.chart) return;
+
+    // When synced with table, use table date range for chart display
+    if (this.isChartSyncedWithTable) {
+      this.updateSyncedChart();
+    } else {
+      // Use normal time period filtering
+      if (this.selectedTimePeriod === 'year') {
+        this.updateYearlyChart();
+      } else if (this.selectedTimePeriod === 'month') {
+        this.updateMonthlyChart();
+      } else if (this.selectedTimePeriod === 'week') {
+        this.updateWeeklyChart();
+      } else {
+        this.updateDailyChart();
+      }
+    }
+  }
+
+  private updateSyncedChart(): void {
+    if (!this.chart) return;
+
+    const filteredStats = this.getFilteredWorkflowStatsForChart();
+    const startDate = new Date(this.tableStartDate);
+    const endDate = new Date(this.tableEndDate);
+
+    // Calculate the date range in days
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+
+    // Create array of all dates in the range
+    const dateRange = Array.from({ length: daysDiff }, (_, index) => {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + index);
+      return {
+        date: date.toISOString().split('T')[0],
+        label: date.toLocaleDateString('fr-FR', {
+          day: '2-digit',
+          month: 'short'
+        }),
+        total: 0,
+        failures: 0
+      };
+    });
+
+    // Group workflow stats data by date
+    if (filteredStats.length > 0) {
+      filteredStats.forEach(stat => {
+        const statDate = stat.procInstDate;
+        const dateData = dateRange.find(d => d.date === statDate);
+        if (dateData) {
+          dateData.total += stat.countJ;
+          dateData.failures += stat.countJEchecs;
+        }
+      });
+    }
+
+    // Update chart with synced data
+    this.chart.data.labels = dateRange.map(d => d.label);
+    this.chart.data.datasets[0].data = dateRange.map(d => d.failures);
+    this.chart.data.datasets[1].data = dateRange.map(d => d.total);
+    this.chart.update('active');
+  }
+
+  private updateYearlyChart(): void {
+    if (!this.chart) return;
+
+    const year = this.selectedYear;
+    const filteredStats = this.getFilteredWorkflowStatsForChart();
+
+    // Create all 12 months for the selected year
+    const allMonths = Array.from({ length: 12 }, (_, index) => {
+      const monthLabel = new Date(year, index).toLocaleDateString('fr-FR', {
+        month: 'long'
+      });
+      return {
+        label: monthLabel,
+        month: index + 1,
+        total: 0,
+        failures: 0
+      };
+    });
+
+    // Group workflow stats data by month if data exists
+    if (filteredStats.length > 0) {
+      filteredStats.forEach(stat => {
+        const statDate = new Date(stat.procInstDate);
+        const monthIndex = statDate.getMonth(); // 0-11
+        const statYear = statDate.getFullYear();
+
+        // Only include data from the selected year
+        if (statYear === year) {
+          allMonths[monthIndex].total += stat.countJ;
+          allMonths[monthIndex].failures += stat.countJEchecs;
+        }
+      });
+    }
+
+    // Prepare chart data
+    const monthLabels = allMonths.map(month => month.label);
+    const totalData = allMonths.map(month => month.total);
+    const failureData = allMonths.map(month => month.failures);
+
+    // Update chart
+    this.chart.data.labels = monthLabels;
+    this.chart.data.datasets[0].data = failureData;
+    this.chart.data.datasets[1].data = totalData;
+    this.chart.update('active');
+  }
+
+  private updateMonthlyChart(): void {
+    if (!this.chart) return;
+
+    const year = this.selectedYear;
+    const month = this.selectedMonth;
+    const filteredStats = this.getFilteredWorkflowStatsForChart();
+
+    // Get all days in the selected month
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    // Create day structure for the entire month
+    const days = Array.from({ length: daysInMonth }, (_, dayIndex) => {
+      const day = dayIndex + 1;
+      const date = new Date(year, month - 1, day);
+      const dayLabel = date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short'
+      });
+      return {
+        label: dayLabel,
+        date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+        total: 0,
+        failures: 0
+      };
+    });
+
+    // Group workflow stats data by day if data exists
+    if (filteredStats.length > 0) {
+      filteredStats.forEach(stat => {
+        const statDate = stat.procInstDate;
+        const statDateObj = new Date(statDate);
+        const statYear = statDateObj.getFullYear();
+        const statMonth = statDateObj.getMonth() + 1;
+
+        // Only include data from the selected year and month
+        if (statYear === year && statMonth === month) {
+          const dayData = days.find(d => d.date === statDate);
+          if (dayData) {
+            dayData.total += stat.countJ;
+            dayData.failures += stat.countJEchecs;
+          }
+        }
+      });
+    }
+
+    // Prepare chart data
+    const dayLabels = days.map(day => day.label);
+    const totalData = days.map(day => day.total);
+    const failureData = days.map(day => day.failures);
+
+    // Update chart
+    this.chart.data.labels = dayLabels;
+    this.chart.data.datasets[0].data = failureData;
+    this.chart.data.datasets[1].data = totalData;
+    this.chart.update('active');
+  }
+
+  private updateWeeklyChart(): void {
+    if (!this.chart) return;
+
+    const year = this.selectedYear;
+    const month = this.selectedMonth;
+    const week = this.selectedWeek;
+    const filteredStats = this.getFilteredWorkflowStatsForChart();
+
+    // Calculate the start and end dates of the selected week
+    const firstDayOfMonth = new Date(year, month - 1, 1);
+    const firstDayWeekday = firstDayOfMonth.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+    // Calculate the start date of the selected week
+    const weekStartDay = (week - 1) * 7 - firstDayWeekday + 1;
+
+    // Create 7 days for the selected week
+    const days = Array.from({ length: 7 }, (_, dayIndex) => {
+      const day = weekStartDay + dayIndex;
+      const date = new Date(year, month - 1, day);
+
+      // Handle cases where the week spans across months
+      const actualMonth = date.getMonth() + 1;
+      const actualYear = date.getFullYear();
+
+      const dayLabel = date.toLocaleDateString('fr-FR', {
+        weekday: 'short',
+        day: '2-digit'
+      });
+
+      return {
+        label: dayLabel,
+        date: `${actualYear}-${String(actualMonth).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
+        total: 0,
+        failures: 0
+      };
+    });
+
+    // Group workflow stats data by day if data exists
+    if (filteredStats.length > 0) {
+      filteredStats.forEach(stat => {
+        const statDate = stat.procInstDate;
+        const statDateObj = new Date(statDate);
+        const statYear = statDateObj.getFullYear();
+
+        // Check if the stat date falls within our date range
+        const dayData = days.find(d => d.date === statDate);
+        if (dayData) {
+          dayData.total += stat.countJ;
+          dayData.failures += stat.countJEchecs;
+        }
+      });
+    }
+
+    // Prepare chart data
+    const dayLabels = days.map(day => day.label);
+    const totalData = days.map(day => day.total);
+    const failureData = days.map(day => day.failures);
+
+    // Update chart
+    this.chart.data.labels = dayLabels;
+    this.chart.data.datasets[0].data = failureData;
+    this.chart.data.datasets[1].data = totalData;
+    this.chart.update('active');
+  }
+
+  private updateDailyChart(): void {
+    if (!this.chart) return;
+
+    // This method can be used for a specific day view if needed
+    // For now, it will show the same as monthly view
+    this.updateMonthlyChart();
+  }
+
+  // dashboard.component.ts
+  getStatusCount(status: StatusString): number {
+    if (!this.processData) return 0;
+    const statusKey = status as keyof typeof this.processData.statusCounts;
+    return this.processData.statusCounts[statusKey] || 0;
+  }
+
+  getStatusPercentage(status: StatusString): number {
+    if (!this.processData) return 0;
+    const detail = this.processData.statusDetails.find(d => d.status === status);
+    return detail?.percentage || 0;
+  }
+
+  getTrendIcon(status: StatusString): string {
+    // Implement your actual trend logic here
+    return 'trending_up';
+  }
+
+  getTotalFailures(): number {
+    const filteredStats = this.getFilteredWorkflowStatsForChart();
+
+    // When synced with table, use all filtered data
+    if (this.isChartSyncedWithTable) {
+      return filteredStats.reduce((total, stat) => total + stat.countJEchecs, 0);
+    }
+
+    // Otherwise use time period filtering
+    if (this.selectedTimePeriod === 'year') {
+      return filteredStats
+          .filter(stat => {
+            const statDate = new Date(stat.procInstDate);
+            return statDate.getFullYear() === this.selectedYear;
+          })
+          .reduce((total, stat) => total + stat.countJEchecs, 0);
+    } else if (this.selectedTimePeriod === 'month') {
+      return filteredStats
+          .filter(stat => {
+            const statDate = new Date(stat.procInstDate);
+            return statDate.getFullYear() === this.selectedYear &&
+                statDate.getMonth() + 1 === this.selectedMonth;
+          })
+          .reduce((total, stat) => total + stat.countJEchecs, 0);
+    } else if (this.selectedTimePeriod === 'week') {
+      // Calculate week range and filter accordingly
+      const year = this.selectedYear;
+      const month = this.selectedMonth;
+      const week = this.selectedWeek;
+      const firstDayOfMonth = new Date(year, month - 1, 1);
+      const firstDayWeekday = firstDayOfMonth.getDay();
+      const weekStartDay = (week - 1) * 7 - firstDayWeekday + 1;
+
+      return filteredStats
+          .filter(stat => {
+            const statDate = new Date(stat.procInstDate);
+            const day = statDate.getDate();
+            const statMonth = statDate.getMonth() + 1;
+            const statYear = statDate.getFullYear();
+
+            return statYear === year &&
+                ((statMonth === month && day >= weekStartDay && day < weekStartDay + 7) ||
+                    (statMonth === month + 1 && day < weekStartDay + 7 - new Date(year, month, 0).getDate()));
+          })
+          .reduce((total, stat) => total + stat.countJEchecs, 0);
+    }
+
+    return filteredStats.reduce((total, stat) => total + stat.countJEchecs, 0);
+  }
+
+  getTotalProcesses(): number {
+    const filteredStats = this.getFilteredWorkflowStatsForChart();
+
+    // When synced with table, use all filtered data
+    if (this.isChartSyncedWithTable) {
+      return filteredStats.reduce((total, stat) => total + stat.countJ, 0);
+    }
+
+    // Otherwise use time period filtering
+    if (this.selectedTimePeriod === 'year') {
+      return filteredStats
+          .filter(stat => {
+            const statDate = new Date(stat.procInstDate);
+            return statDate.getFullYear() === this.selectedYear;
+          })
+          .reduce((total, stat) => total + stat.countJ, 0);
+    } else if (this.selectedTimePeriod === 'month') {
+      return filteredStats
+          .filter(stat => {
+            const statDate = new Date(stat.procInstDate);
+            return statDate.getFullYear() === this.selectedYear &&
+                statDate.getMonth() + 1 === this.selectedMonth;
+          })
+          .reduce((total, stat) => total + stat.countJ, 0);
+    } else if (this.selectedTimePeriod === 'week') {
+      // Calculate week range and filter accordingly
+      const year = this.selectedYear;
+      const month = this.selectedMonth;
+      const week = this.selectedWeek;
+      const firstDayOfMonth = new Date(year, month - 1, 1);
+      const firstDayWeekday = firstDayOfMonth.getDay();
+      const weekStartDay = (week - 1) * 7 - firstDayWeekday + 1;
+
+      return filteredStats
+          .filter(stat => {
+            const statDate = new Date(stat.procInstDate);
+            const day = statDate.getDate();
+            const statMonth = statDate.getMonth() + 1;
+            const statYear = statDate.getFullYear();
+
+            return statYear === year &&
+                ((statMonth === month && day >= weekStartDay && day < weekStartDay + 7) ||
+                    (statMonth === month + 1 && day < weekStartDay + 7 - new Date(year, month, 0).getDate()));
+          })
+          .reduce((total, stat) => total + stat.countJ, 0);
+    }
+
+    return filteredStats.reduce((total, stat) => total + stat.countJ, 0);
+  }
+
+  viewProcessDetails(stat: WorkflowStatsData): void {
+    console.log('Viewing details for process:', stat);
+    // Implement navigation to details view or open modal
+    // Example: this.router.navigate(['/process-details', stat.procDefId]);
+  }
+
+  // New method to sync table filters with chart
+  syncTableFiltersWithChart(): void {
+    this.isChartSyncedWithTable = true;
+    // Force chart update with table filters
+    this.updateProcessChart();
+  }
+
+  // New method to unsync table filters from chart
+  unsyncTableFiltersFromChart(): void {
+    this.isChartSyncedWithTable = false;
+    // Revert to normal chart filtering
+    this.updateProcessChart();
+  }
+
+  onTableDateFilterChange(): void {
+    // Validate dates - prevent future dates
+    const today = new Date().toISOString().split('T')[0];
+
+    if (this.tableStartDate > today) {
+      this.tableStartDate = today;
+    }
+
+    if (this.tableEndDate > today) {
+      this.tableEndDate = today;
+    }
+
+    // Ensure start date is not after end date
+    if (this.tableStartDate > this.tableEndDate) {
+      this.tableEndDate = this.tableStartDate;
+    }
+
+    this.filterTableData();
+
+    // Auto-update chart if synced
+    if (this.isChartSyncedWithTable) {
+      this.updateProcessChart();
+    }
+  }
+
+  // Override time period change methods to clear sync when chart controls are used
+  onTimePeriodChange(): void {
+    if (this.isChartSyncedWithTable) {
+      this.isChartSyncedWithTable = false;
+    }
+    // Ensure chart updates properly
+    setTimeout(() => {
+      this.updateProcessChart();
+    }, 10);
+  }
+
+  onYearChange(): void {
+    if (this.isChartSyncedWithTable) {
+      this.isChartSyncedWithTable = false;
+    }
+    // Reset to current month if switching years
+    const currentDate = new Date();
+    if (this.selectedYear === currentDate.getFullYear()) {
+      this.selectedMonth = Math.min(this.selectedMonth, currentDate.getMonth() + 1);
+    }
+    // Ensure chart updates properly
+    setTimeout(() => {
+      this.updateProcessChart();
+    }, 10);
+  }
+
+  onMonthChange(): void {
+    if (this.selectedTimePeriod === 'week') {
+      this.selectedWeek = 1; // Reset to first week when month changes
+    }
+    if (this.isChartSyncedWithTable) {
+      this.isChartSyncedWithTable = false;
+    }
+    // Ensure chart updates properly
+    setTimeout(() => {
+      this.updateProcessChart();
+    }, 10);
+  }
+
+  onWeekChange(): void {
+    if (this.isChartSyncedWithTable) {
+      this.isChartSyncedWithTable = false;
+    }
+    // Ensure chart updates properly
+    setTimeout(() => {
+      this.updateProcessChart();
+    }, 10);
+  }
+
+  onProcessDefinitionChange(): void {
+    this.filterTableData();
+    // Ensure chart updates properly
+    setTimeout(() => {
+      this.updateProcessChart();
+    }, 10);
+  }
+
+  getWeeksInMonth(): number[] {
+    const year = this.selectedYear;
+    const month = this.selectedMonth;
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const weeksCount = Math.ceil((lastDay.getDate() + firstDay.getDay()) / 7);
+    return Array.from({ length: weeksCount }, (_, i) => i + 1);
+  }
+
+  resetTableFilter(): void {
+    this.tableStartDate = new Date().toISOString().split('T')[0];
+    this.tableEndDate = new Date().toISOString().split('T')[0];
+    this.tableCurrentPage = 1; // Reset to first page
+    this.filterTableData();
+
+    // Update chart if synced
+    if (this.isChartSyncedWithTable) {
+      this.updateProcessChart();
+    }
+  }
+
+  setTableFilterToLastWeek(): void {
+    const today = new Date();
+    const lastWeek = new Date(today);
+    lastWeek.setDate(today.getDate() - 7);
+
+    this.tableStartDate = lastWeek.toISOString().split('T')[0];
+    this.tableEndDate = today.toISOString().split('T')[0];
+    this.tableCurrentPage = 1; // Reset to first page
+    this.filterTableData();
+
+    // Update chart if synced
+    if (this.isChartSyncedWithTable) {
+      this.updateProcessChart();
+    }
+  }
+
+  setTableFilterToLastMonth(): void {
+    const today = new Date();
+    const lastMonth = new Date(today);
+    lastMonth.setMonth(today.getMonth() - 1);
+
+    this.tableStartDate = lastMonth.toISOString().split('T')[0];
+    this.tableEndDate = today.toISOString().split('T')[0];
+    this.tableCurrentPage = 1; // Reset to first page
+    this.filterTableData();
+
+    // Update chart if synced
+    if (this.isChartSyncedWithTable) {
+      this.updateProcessChart();
+    }
+  }
+
+  private filterTableData(): void {
+    if (!this.workflowStats.length) {
+      this.filteredWorkflowStats = [];
+      this.tablePaginatedData = [];
+      this.updateTablePagination();
+      return;
+    }
+
+    const startDate = new Date(this.tableStartDate);
+    const endDate = new Date(this.tableEndDate);
+
+    // Set end date to end of day for inclusive filtering
+    endDate.setHours(23, 59, 59, 999);
+
+    this.filteredWorkflowStats = this.workflowStats.filter(stat => {
+      const statDate = new Date(stat.procInstDate);
+      const dateMatch = statDate >= startDate && statDate <= endDate;
+      const processMatch = this.selectedProcessDefinition === 'all' || stat.procDefName === this.selectedProcessDefinition;
+
+      return dateMatch && processMatch;
+    });
+
+    // Sort by date descending (most recent first)
+    this.filteredWorkflowStats.sort((a, b) =>
+        new Date(b.procInstDate).getTime() - new Date(a.procInstDate).getTime()
+    );
+
+    // Reset to first page when filter changes
+    this.tableCurrentPage = 1;
+    this.updateTablePagination();
+  }
+
+  // Pagination methods for the workflow stats table
+  private updateTablePagination(): void {
+    // Ensure pageSize is a number
+    this.tablePageSize = Number(this.tablePageSize);
+
+    if (!this.tablePageSize || this.tablePageSize < 1) {
+      this.tablePageSize = 5;
+    }
+
+    this.tableTotalPages = Math.max(1, Math.ceil(this.filteredWorkflowStats.length / this.tablePageSize));
+
+    if (this.tableCurrentPage > this.tableTotalPages) {
+      this.tableCurrentPage = this.tableTotalPages;
+    }
+    if (this.tableCurrentPage < 1) {
+      this.tableCurrentPage = 1;
+    }
+
+    const startIndex = (this.tableCurrentPage - 1) * this.tablePageSize;
+    const endIndex = Math.min(startIndex + this.tablePageSize, this.filteredWorkflowStats.length);
+
+    this.tablePaginatedData = this.filteredWorkflowStats.slice(startIndex, endIndex);
+    this.calculateTableVisiblePageNumbers();
+  }
+
+  private calculateTableVisiblePageNumbers(): void {
+    this.tableVisiblePageNumbers = [];
+
+    if (this.tableTotalPages <= 7) {
+      for (let i = 1; i <= this.tableTotalPages; i++) {
+        this.tableVisiblePageNumbers.push(i);
+      }
+    } else {
+      if (this.tableCurrentPage <= 4) {
+        for (let i = 1; i <= 5; i++) {
+          this.tableVisiblePageNumbers.push(i);
+        }
+        this.tableVisiblePageNumbers.push(-1); // ellipsis
+        this.tableVisiblePageNumbers.push(this.tableTotalPages);
+      } else if (this.tableCurrentPage >= this.tableTotalPages - 3) {
+        this.tableVisiblePageNumbers.push(1);
+        this.tableVisiblePageNumbers.push(-1); // ellipsis
+        for (let i = this.tableTotalPages - 4; i <= this.tableTotalPages; i++) {
+          this.tableVisiblePageNumbers.push(i);
+        }
+      } else {
+        this.tableVisiblePageNumbers.push(1);
+        this.tableVisiblePageNumbers.push(-1); // ellipsis
+        for (let i = this.tableCurrentPage - 1; i <= this.tableCurrentPage + 1; i++) {
+          this.tableVisiblePageNumbers.push(i);
+        }
+        this.tableVisiblePageNumbers.push(-1); // ellipsis
+        this.tableVisiblePageNumbers.push(this.tableTotalPages);
+      }
+    }
+  }
+
+  tableNextPage(): void {
+    if (this.tableCurrentPage < this.tableTotalPages) {
+      this.tableCurrentPage++;
+      this.updateTablePagination();
+    }
+  }
+
+  tablePreviousPage(): void {
+    if (this.tableCurrentPage > 1) {
+      this.tableCurrentPage--;
+      this.updateTablePagination();
+    }
+  }
+
+  tableGoToPage(page: number): void {
+    if (page >= 1 && page <= this.tableTotalPages && page !== this.tableCurrentPage) {
+      this.tableCurrentPage = page;
+      this.updateTablePagination();
+    }
+  }
+
+  onTablePageSizeChange(): void {
+    // Ensure pageSize is a number
+    this.tablePageSize = Number(this.tablePageSize);
+
+    const firstItemIndex = (this.tableCurrentPage - 1) * this.tablePageSize;
+    this.tableCurrentPage = Math.floor(firstItemIndex / this.tablePageSize) + 1 || 1;
+    this.updateTablePagination();
+  }
+
+  getTablePageButtonClasses(pageNum: number): string {
+    if (pageNum === -1) {
+      return 'text-gray-500 bg-white border-gray-300 cursor-default';
+    }
+    if (pageNum === this.tableCurrentPage) {
+      return 'bg-red-600 text-white';
+    }
+    return 'border border-gray-300 hover:bg-gray-50';
+  }
+
+  // Helper method for tracking in ngFor
+  trackByProcDefId(index: number, item: WorkflowStatsData): string {
+    return `${item.procDefId}-${item.procInstDate}`;
+  }
+}

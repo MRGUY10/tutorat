@@ -1,0 +1,36 @@
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar Component -->
+  <app-sidebar
+        [user]="user"
+        [isOpen]="!sidebarCollapsed()"
+        (toggleSidebar)="toggleSidebar()"
+        (logout)="logout()">
+</app-sidebar>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col">
+    <!-- Header Component -->
+    <app-header 
+      [user]="user" 
+      [title]="currentPageTitle"
+      (toggleSidebar)="toggleSidebar()">
+    </app-header>
+
+<!--    &lt;!&ndash; Testing Role Switcher (Remove in production) &ndash;&gt;-->
+<!--    <div class="bg-yellow-100 border-b border-yellow-200 px-4 py-2">-->
+<!--      <div class="flex items-center justify-between">-->
+<!--        <span class="text-sm text-yellow-800">Testing Mode - Current Role: <strong>{{ user?.role }}</strong></span>-->
+<!--        <div class="flex space-x-2">-->
+<!--          <button (click)="switchUserRole(userRoles.STUDENT)" class="text-xs bg-blue-500 text-white px-2 py-1 rounded">Student</button>-->
+<!--          <button (click)="switchUserRole(userRoles.TUTOR)" class="text-xs bg-green-500 text-white px-2 py-1 rounded">Tutor</button>-->
+<!--          <button (click)="switchUserRole(userRoles.ADMIN)" class="text-xs bg-purple-500 text-white px-2 py-1 rounded">Admin</button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+
+    <!-- Page Content -->
+    <main class="flex-1 overflow-auto">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

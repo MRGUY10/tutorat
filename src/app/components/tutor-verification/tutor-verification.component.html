@@ -1,0 +1,335 @@
+<div class="tutor-verification-container">
+  <!-- Header -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-left">
+        <h2 class="page-title">✅ Vérification des Tuteurs</h2>
+        <p class="page-subtitle">Gérer la vérification et l'approbation des tuteurs</p>
+      </div>
+      <button (click)="refresh()" class="refresh-btn" [disabled]="loading">
+        <span class="material-icons" [class.spin]="loading">refresh</span>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    <span class="material-icons">error</span>
+    {{ error }}
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <span class="material-icons">people</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalTutors }}</div>
+        <div class="stat-label">Total Tuteurs</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <span class="material-icons">verified</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalVerified }}</div>
+        <div class="stat-label">Vérifiés</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+        <span class="material-icons">pending</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalUnverified }}</div>
+        <div class="stat-label">En attente</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
+        <span class="material-icons">star</span>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ averageRating.toFixed(1) }}</div>
+        <div class="stat-label">Note Moyenne</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Rechercher par nom, email, ville..."
+        class="search-input" />
+    </div>
+
+    <div class="filter-buttons">
+      <button
+        (click)="onStatusFilterChange('all')"
+        [class.active]="statusFilter === 'all'"
+        class="filter-btn">
+        Tous
+      </button>
+      <button
+        (click)="onStatusFilterChange('verified')"
+        [class.active]="statusFilter === 'verified'"
+        class="filter-btn">
+        Vérifiés
+      </button>
+      <button
+        (click)="onStatusFilterChange('unverified')"
+        [class.active]="statusFilter === 'unverified'"
+        class="filter-btn">
+        Non vérifiés
+      </button>
+    </div>
+
+    <div class="sort-dropdown">
+      <label>Trier par:</label>
+      <select [(ngModel)]="sortBy" (ngModelChange)="applyFilters()" class="sort-select">
+        <option value="name">Nom</option>
+        <option value="rating">Note</option>
+        <option value="evaluations">Évaluations</option>
+        <option value="date">Date d'inscription</option>
+      </select>
+      <button (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; applyFilters()" class="sort-direction-btn">
+        <span class="material-icons">{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des tuteurs...</p>
+  </div>
+
+  <!-- Tutors List -->
+  <div *ngIf="!loading && filteredTutors.length > 0" class="tutors-list">
+    <div *ngFor="let tutor of filteredTutors" class="tutor-card">
+      <div class="tutor-header">
+        <div class="tutor-avatar">
+          {{ tutor.prenom.charAt(0) }}{{ tutor.nom.charAt(0) }}
+        </div>
+        <div class="tutor-info">
+          <h3 class="tutor-name">{{ tutor.prenom }} {{ tutor.nom }}</h3>
+          <p class="tutor-email">{{ tutor.email }}</p>
+          <div class="tutor-rating" *ngIf="tutor.noteMoyenne">
+            <span class="stars">{{ getRatingStars(tutor.noteMoyenne) }}</span>
+            <span class="rating-text">{{ tutor.noteMoyenne.toFixed(1) }} ({{ tutor.nombreEvaluations || 0 }})</span>
+          </div>
+        </div>
+        <div class="tutor-status">
+          <span [ngClass]="getVerificationBadgeClass(tutor.verifie || false)" class="status-badge">
+            <span class="material-icons">{{ getVerificationIcon(tutor.verifie || false) }}</span>
+            {{ tutor.verifie ? 'Vérifié' : 'Non vérifié' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="tutor-details">
+        <div class="detail-item" *ngIf="tutor.ville">
+          <span class="material-icons">location_on</span>
+          {{ tutor.ville }}, {{ tutor.pays || 'France' }}
+        </div>
+        <div class="detail-item" *ngIf="tutor.tarifHoraire">
+          <span class="material-icons">euro</span>
+          {{ tutor.tarifHoraire }}€/h
+        </div>
+      </div>
+
+      <!-- Specialties as Badges -->
+      <div *ngIf="tutor.specialites && tutor.specialites.length > 0" class="specialties-section">
+        <div class="specialty-label">
+          <span class="material-icons">school</span>
+          <span>Spécialités:</span>
+        </div>
+        <div class="specialties-badges">
+          <span *ngFor="let spec of tutor.specialites" class="specialty-badge">
+            {{ spec.matiereNom }}
+          </span>
+        </div>
+      </div>
+
+      <div class="tutor-details">
+        <div class="detail-item">
+          <span class="material-icons">event</span>
+          Inscrit le {{ formatDate(tutor.dateInscription) }}
+        </div>
+      </div>
+
+      <div class="tutor-actions">
+        <button (click)="viewTutorDetails(tutor)" class="btn-secondary">
+          <span class="material-icons">visibility</span>
+          Détails
+        </button>
+
+        <button
+          *ngIf="!tutor.verifie"
+          (click)="openVerifyConfirmation(tutor)"
+          [disabled]="tutor.processing"
+          class="btn-success">
+          <span class="material-icons">verified</span>
+          {{ tutor.processing ? 'Traitement...' : 'Vérifier' }}
+        </button>
+
+        <button
+          *ngIf="tutor.verifie"
+          (click)="openUnverifyConfirmation(tutor)"
+          [disabled]="tutor.processing"
+          class="btn-warning">
+          <span class="material-icons">cancel</span>
+          {{ tutor.processing ? 'Traitement...' : 'Retirer la vérification' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredTutors.length === 0" class="empty-state">
+    <span class="material-icons empty-icon">search_off</span>
+    <h3>Aucun tuteur trouvé</h3>
+    <p>Essayez de modifier vos critères de recherche</p>
+  </div>
+
+  <!-- Details Modal -->
+  <div *ngIf="showDetailsModal && selectedTutor" class="modal-overlay" (click)="closeDetailsModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ selectedTutor.prenom }} {{ selectedTutor.nom }}</h3>
+        <button (click)="closeDetailsModal()" class="close-btn">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-section">
+          <h4>Informations personnelles</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <strong>Email:</strong>
+              <span>{{ selectedTutor.email }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedTutor.telephone">
+              <strong>Téléphone:</strong>
+              <span>{{ selectedTutor.telephone }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedTutor.ville">
+              <strong>Localisation:</strong>
+              <span>{{ selectedTutor.ville }}, {{ selectedTutor.pays || 'France' }}</span>
+            </div>
+            <div class="info-item">
+              <strong>Statut:</strong>
+              <span [ngClass]="getVerificationBadgeClass(selectedTutor.verifie || false)" class="status-badge-inline">
+                {{ selectedTutor.verifie ? 'Vérifié' : 'Non vérifié' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-section" *ngIf="selectedTutor.experience">
+          <h4>Expérience</h4>
+          <p>{{ selectedTutor.experience }}</p>
+        </div>
+
+        <div class="modal-section" *ngIf="selectedTutor.diplomes">
+          <h4>Diplômes</h4>
+          <p>{{ selectedTutor.diplomes }}</p>
+        </div>
+
+        <div class="modal-section" *ngIf="selectedTutor.description">
+          <h4>Description</h4>
+          <p>{{ selectedTutor.description }}</p>
+        </div>
+
+        <div class="modal-section" *ngIf="selectedTutor.specialites && selectedTutor.specialites.length > 0">
+          <h4>Spécialités</h4>
+          <div class="specialties-list">
+            <span *ngFor="let spec of selectedTutor.specialites" class="specialty-tag">
+              {{ spec.matiereNom }}
+            </span>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <h4>Évaluations</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <strong>Note moyenne:</strong>
+              <span>{{ selectedTutor.noteMoyenne?.toFixed(2) || 'N/A' }} / 5.0</span>
+            </div>
+            <div class="info-item">
+              <strong>Nombre d'évaluations:</strong>
+              <span>{{ selectedTutor.nombreEvaluations || 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <h4>Disponibilité</h4>
+          <div class="availability-badges">
+            <span *ngIf="selectedTutor.coursEnLigne" class="badge badge-blue">💻 En ligne</span>
+            <span *ngIf="selectedTutor.coursPresentiel" class="badge badge-green">🏫 Présentiel</span>
+            <span *ngIf="selectedTutor.disponible" class="badge badge-success">✓ Disponible</span>
+            <span *ngIf="!selectedTutor.disponible" class="badge badge-gray">✗ Non disponible</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeDetailsModal()" class="btn-secondary">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div *ngIf="showConfirmModal && selectedTutor" class="modal-overlay" (click)="cancelVerificationAction()">
+    <div class="modal-content confirmation-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ confirmAction === 'verify' ? 'Vérifier le tuteur' : 'Retirer la vérification' }}</h3>
+        <button (click)="cancelVerificationAction()" class="close-btn">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p *ngIf="confirmAction === 'verify'">
+          Êtes-vous sûr de vouloir vérifier <strong>{{ selectedTutor.prenom }} {{ selectedTutor.nom }}</strong> ?
+          <br><br>
+          Cette action marquera ce tuteur comme vérifié et lui donnera plus de visibilité sur la plateforme.
+        </p>
+        <p *ngIf="confirmAction === 'unverify'">
+          Êtes-vous sûr de vouloir retirer la vérification de <strong>{{ selectedTutor.prenom }} {{ selectedTutor.nom }}</strong> ?
+          <br><br>
+          Cette action retirera le statut vérifié de ce tuteur.
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="cancelVerificationAction()" class="btn-secondary">Annuler</button>
+        <button
+          (click)="confirmVerificationAction()"
+          [class.btn-success]="confirmAction === 'verify'"
+          [class.btn-warning]="confirmAction === 'unverify'">
+          {{ confirmAction === 'verify' ? 'Vérifier' : 'Retirer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

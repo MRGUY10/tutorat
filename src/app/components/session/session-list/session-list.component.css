@@ -1,0 +1,259 @@
+/* Session List Component Styles */
+
+.session-card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.session-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.status-indicator {
+  position: relative;
+}
+
+.status-indicator::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-indicator.status-demandee::before {
+  background-color: #f59e0b;
+}
+
+.status-indicator.status-confirmee::before {
+  background-color: #3b82f6;
+}
+
+.status-indicator.status-en-cours::before {
+  background-color: #10b981;
+}
+
+.status-indicator.status-terminee::before {
+  background-color: #6b7280;
+}
+
+.status-indicator.status-annulee::before {
+  background-color: #ef4444;
+}
+
+.session-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.urgency-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-down {
+  animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Loading animation */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Action button animations */
+.action-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* Filter panel animation */
+.filter-panel {
+  transition: all 0.3s ease-in-out;
+}
+
+.filter-panel.show {
+  max-height: 300px;
+  opacity: 1;
+}
+
+.filter-panel.hide {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+/* Session status colors */
+.session-status-demandee {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.session-status-confirmee {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.session-status-en-cours {
+  background-color: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+.session-status-terminee {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.session-status-annulee {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+/* Session type colors */
+.session-type-en-ligne {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.session-type-presentiel {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+/* Priority indicators */
+.priority-haute {
+  color: #dc2626;
+}
+
+.priority-moyenne {
+  color: #d97706;
+}
+
+.priority-faible {
+  color: #059669;
+}
+
+/* Grid layout improvements */
+.session-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .session-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Table row hover effect */
+.table-row {
+  transition: all 0.2s ease-in-out;
+}
+
+.table-row:hover {
+  background-color: #f9fafb;
+}
+
+.table-row.selected {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .mobile-hide {
+    display: none;
+  }
+  
+  .mobile-stack {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .mobile-full-width {
+    width: 100%;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    background: white !important;
+    color: black !important;
+  }
+}

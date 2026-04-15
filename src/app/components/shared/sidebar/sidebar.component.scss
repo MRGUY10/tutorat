@@ -1,0 +1,194 @@
+.nav-item {
+  position: relative;
+  
+  .nav-link {
+    position: relative;
+    
+    &:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 0 2px 2px 0;
+      transform: scaleY(0);
+      transition: transform 0.2s ease;
+    }
+    
+    &:hover {
+      background-color: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      
+      &:before {
+        transform: scaleY(1);
+      }
+    }
+    
+    &.active {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      color: #667eea;
+      
+      &:before {
+        transform: scaleY(1);
+      }
+      
+      svg {
+        color: #667eea;
+      }
+    }
+  }
+  
+  .submenu-link {
+    position: relative;
+    
+    &:before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      width: 12px;
+      height: 1px;
+      background-color: #e5e7eb;
+      transform: translateY(-50%);
+    }
+    
+    &:after {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background-color: #e5e7eb;
+    }
+    
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+    
+    &.active-child {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+      font-weight: 500;
+      
+      &:before {
+        background-color: #3b82f6;
+      }
+    }
+    
+    &:last-child:after {
+      height: 50%;
+    }
+  }
+}
+
+// Logo section styling
+.logo-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  .logo-icon {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+  }
+}
+
+// User profile section
+.user-profile {
+  .user-avatar {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  }
+}
+
+// Logout button
+.logout-button {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Scrollbar styling
+nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 2px;
+    
+    &:hover {
+      background-color: rgba(156, 163, 175, 0.7);
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Animation for sidebar toggle
+.sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Dark mode support (future enhancement)
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background-color: #1f2937;
+    border-color: #374151;
+    
+    .nav-link {
+      color: #d1d5db;
+      
+      &:hover {
+        background-color: rgba(75, 85, 99, 0.3);
+        color: #f3f4f6;
+      }
+      
+      &.active {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+    }
+    
+    .submenu-link {
+      color: #9ca3af;
+      
+      &:hover {
+        color: #f3f4f6;
+      }
+    }
+  }
+}
