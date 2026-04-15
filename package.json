@@ -3,9 +3,11 @@
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "node scripts/start-render.js",
+    "start": "node scripts/serve-dist.js",
     "start:local": "ng serve",
-    "build": "ng build"
+    "start:dev": "node scripts/start-render.js",
+    "build": "ng build --configuration production",
+    "postinstall": "ng build --configuration production"
   },
   "dependencies": {
     "@angular/animations": "^19.2.0",
